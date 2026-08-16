@@ -1,0 +1,74 @@
+{
+  "anti_stress_products": [
+    {
+      "id": "prod_seaweed_ext",
+      "name": "Biostimulant Ascophyllum Nodosum Extract",
+      "category": "Seaweed Extract",
+      "active_ingredients": ["Alginic Acid", "Mannitol", "Polyphenols", "Phytohormone Precursors"],
+      "target_stresses": ["heat", "drought", "high_vpd"],
+      "dosage": "1.5 - 2.5 L/ha foliar application",
+      "application_window": "Apply 24-48 hours before predicted heat spike or drought period; repeat every 7-10 days under sustained stress.",
+      "scientific_rationale": "Stimulates endogenous antioxidant enzymes (Superoxide Dismutase SOD, Peroxidase POD), maintains cellular turgor, and reduces ROS accumulation during high temperature and water deficit."
+    },
+    {
+      "id": "prod_proline_amino",
+      "name": "Free Amino Acid Complex (L-Proline & Glutamic Acid)",
+      "category": "Amino Acid Biostimulant",
+      "active_ingredients": ["L-Proline (15%)", "L-Glutamic Acid (10%)", "Free Enzymatic Amino Acids"],
+      "target_stresses": ["heat", "frost", "drought"],
+      "dosage": "1.0 - 2.0 L/ha foliar spray",
+      "application_window": "Foliar application prior to or immediately following thermal or water stress events.",
+      "scientific_rationale": "L-Proline acts as a potent osmoprotectant and protein stabilizer, protecting cell membranes and enzyme complexes from heat denaturation and freeze injury."
+    },
+    {
+      "id": "prod_glycine_betaine",
+      "name": "Purified Glycine Betaine Osmo-Protectant",
+      "category": "Osmolyte Biostimulant",
+      "active_ingredients": ["Glycine Betaine (97% pure)"],
+      "target_stresses": ["drought", "high_vpd", "heat"],
+      "dosage": "2.0 - 4.0 kg/ha foliar application",
+      "application_window": "Apply during early vegetative or reproductive stages when atmospheric demand (VPD > 1.8 kPa) or soil moisture deficit is predicted.",
+      "scientific_rationale": "Sustains cellular turgor pressure and protects photosystem II (PSII) activity without disrupting normal metabolic pathways."
+    },
+    {
+      "id": "prod_potassium_silicate",
+      "name": "Soluble Potassium Silicate (Si + K)",
+      "category": "Mineral Fortifier",
+      "active_ingredients": ["Silicon Dioxide (SiO2 25%)", "Potassium Oxide (K2O 12%)"],
+      "target_stresses": ["high_vpd", "drought", "heat"],
+      "dosage": "2.0 - 3.0 L/ha foliar or fertigation",
+      "application_window": "Apply during active vegetative canopy expansion.",
+      "scientific_rationale": "Silicon deposits in the leaf cuticle layer, forming a physical barrier that reduces cuticular transpiration by 20-30% while Potassium enhances stoma guard cell regulation."
+    },
+    {
+      "id": "prod_salicylic_acid",
+      "name": "Systemic Stress Primer (Salicylic Acid Formula)",
+      "category": "Phytohormonal Priming Agent",
+      "active_ingredients": ["Salicylic Acid (50 mg/L active)"],
+      "target_stresses": ["heat", "frost"],
+      "dosage": "0.5 - 1.0 L/ha foliar application",
+      "application_window": "Apply 48 hours in advance of extreme temperature anomalies.",
+      "scientific_rationale": "Induces Heat Shock Proteins (HSPs) and triggers Systemic Acquired Acclimatization (SAA), reducing physiological shock and flower/pod abortion."
+    },
+    {
+      "id": "prod_calcium_boron",
+      "name": "Foliar Calcium-Boron Membrane Stabilizer",
+      "category": "Nutritional Supplement",
+      "active_ingredients": ["Soluble Calcium (CaO 15%)", "Boron (B 1.5%)"],
+      "target_stresses": ["heat", "low_vpd", "waterlogging"],
+      "dosage": "2.0 - 3.0 L/ha foliar application",
+      "application_window": "Apply during flowering, fruit set, or post-flooding root recovery.",
+      "scientific_rationale": "Calcium binds to cell wall pectins and cell membranes, preventing membrane leakage during stress, while Boron supports pollen tube elongation during reproductive heat."
+    },
+    {
+      "id": "prod_humic_fulvic",
+      "name": "Root Revitalizer Humic & Fulvic Acid Extract",
+      "category": "Soil & Root Biostimulant",
+      "active_ingredients": ["Fulvic Acid (20%)", "Humic Acid (50%)"],
+      "target_stresses": ["waterlogging", "drought"],
+      "dosage": "3.0 - 5.0 L/ha fertigation / soil drench",
+      "application_window": "Apply post-waterlogging drainage to stimulate adventitious root regrowth and soil microbial activity.",
+      "scientific_rationale": "Chelates trace micronutrients (Fe, Mn, Zn) in hypoxic soil conditions and promotes lateral root development after hypoxia or severe drought."
+    }
+  ]
+}

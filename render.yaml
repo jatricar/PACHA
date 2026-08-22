@@ -10,4 +10,4 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: DATABASE_URL
-        sync: false  # set this in the Render dashboard - never commit the Supabase password to git
+        sync: postgresql://postgres:[ro0cLjVHqrIIvH34]@db.ypkiqljimobynpymfubv.supabase.co:5432/postgres

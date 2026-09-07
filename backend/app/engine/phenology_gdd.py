@@ -18,13 +18,32 @@ class PhenologyGDDEngine:
         gdd = t_avg - t_base
         return max(0.0, round(gdd, 2))
 
+    def _estimate_temps_for_day(self, d_date: datetime, lat: Optional[float], historical_baseline: Optional[Dict[str, Any]] = None) -> tuple:
+        """Best-available temperature estimate for a day with no real weather
+        record, in priority order:
+        1. The location's own real 30-year ERA5 monthly climatology (accurate,
+           location-specific - this is what we use for most of the forward
+           projection to harvest, since real forecasts only cover ~7 days).
+        2. A generic latitude-aware seasonal sine curve, only if ERA5 data for
+           this location isn't available either (last resort).
+        """
+        if historical_baseline:
+            month_data = historical_baseline.get(str(d_date.month))
+            if month_data and month_data.get("hist_temp_max") is not None and month_data.get("hist_temp_min") is not None:
+                return month_data["hist_temp_max"], month_data["hist_temp_min"]
+        return self._estimate_seasonal_temps(d_date, lat)
+
     def _estimate_seasonal_temps(self, d_date: datetime, lat: Optional[float]) -> tuple:
-        """Latitude-aware seasonal fallback, used ONLY for days where no real
-        weather record (forecast, recent actuals, or ERA5 archive) is available.
-        Southern hemisphere fields (lat < 0) have their warm/cool season flipped
-        relative to the north - this used to be a hardcoded northern-hemisphere
+        """Generic latitude-aware seasonal fallback, used only when neither real
+        weather NOR the location's ERA5 climatology is available. Southern
+        hemisphere fields (lat < 0) have their warm/cool season flipped relative
+        to the north - this used to be a hardcoded northern-hemisphere
         assumption, which badly under/over-estimated GDD for fields below the
-        equator (e.g. winter in Argentina was being treated as summer)."""
+        equator (e.g. winter in Argentina was being treated as summer). Being a
+        global approximation, it won't capture regional effects (e.g. a
+        maritime-moderated climate like Mar del Plata's) as well as real ERA5
+        data does - it is intentionally a last-resort fallback, not the primary
+        source for forward projection."""
         day_of_year = d_date.timetuple().tm_yday
         hemisphere_sign = 1.0 if (lat is None or lat >= 0) else -1.0
         seasonal_temp = 22.0 + 8.0 * math.sin(2 * math.pi * (day_of_year - 80) / 365) * hemisphere_sign
@@ -40,14 +59,16 @@ class PhenologyGDDEngine:
         current_date_str: str = None,
         recent_weather: Any = None,
         lat: Optional[float] = None,
+        historical_baseline: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Evaluate field phenological progress, BBCH stage, and GDD accumulation.
 
         recent_weather: preferably a dict keyed by "YYYY-MM-DD" -> {temp_max, temp_min, ...}
         covering (ideally) every day since planting - this is real observed/forecast
         weather and always takes priority. Days without a matching entry fall back to
-        a latitude-aware seasonal estimate (see _estimate_seasonal_temps below).
-        A list of dicts with a "date" key is also accepted for backward compatibility.
+        the location's real ERA5 monthly climatology (historical_baseline), and only
+        then to a generic latitude-aware seasonal estimate. A list of dicts with a
+        "date" key is also accepted for backward compatibility.
         """
         if crop_id not in self.database:
             crop_id = "maize"
@@ -93,7 +114,7 @@ class PhenologyGDDEngine:
                 tmin = matching_weather["temp_min"]
                 days_with_real_data += 1
             else:
-                tmax, tmin = self._estimate_seasonal_temps(d_date, lat)
+                tmax, tmin = self._estimate_temps_for_day(d_date, lat, historical_baseline)
 
             daily_gdd = self.calculate_daily_gdd(tmax, tmin, t_base, t_opt)
             accumulated_gdd += daily_gdd
@@ -132,11 +153,43 @@ class PhenologyGDDEngine:
         if current_stage is None:
             current_stage = stages_response[-1]
 
-        # Calculate projected maturity date
-        remaining_gdd = max(0.0, total_required_gdd - accumulated_gdd)
-        avg_daily_gdd_rate = max(5.0, (t_opt - t_base) * 0.6)
-        est_days_remaining = int(remaining_gdd / avg_daily_gdd_rate)
-        projected_maturity_date = (c_date + timedelta(days=est_days_remaining)).strftime("%Y-%m-%d")
+        # Calculate projected maturity date by simulating forward day-by-day —
+        # mirrors the backward-looking accumulation above: real forecast data
+        # where we have it, the same latitude-aware seasonal estimate everywhere
+        # else. This replaces the old flat "near-optimal growth every day"
+        # assumption, which badly underestimated time-to-maturity for crops
+        # heading into a cooler season (e.g. barley planted in autumn in the
+        # Southern Hemisphere).
+        MAX_SIMULATION_DAYS = 500  # safety cap - no real crop takes longer than this
+        projected_maturity_date = None
+        maturity_uncertain = False
+
+        if accumulated_gdd >= total_required_gdd:
+            projected_maturity_date = c_date.strftime("%Y-%m-%d")
+        else:
+            sim_date = c_date
+            sim_accumulated = accumulated_gdd
+            for _ in range(MAX_SIMULATION_DAYS):
+                day_str = sim_date.strftime("%Y-%m-%d")
+                matching_weather = weather_by_date.get(day_str)
+
+                if matching_weather and matching_weather.get("temp_max") is not None and matching_weather.get("temp_min") is not None:
+                    tmax = matching_weather["temp_max"]
+                    tmin = matching_weather["temp_min"]
+                else:
+                    tmax, tmin = self._estimate_temps_for_day(sim_date, lat, historical_baseline)
+
+                sim_accumulated += self.calculate_daily_gdd(tmax, tmin, t_base, t_opt)
+                sim_date += timedelta(days=1)
+
+                if sim_accumulated >= total_required_gdd:
+                    projected_maturity_date = sim_date.strftime("%Y-%m-%d")
+                    break
+
+            if projected_maturity_date is None:
+                # Didn't reach maturity within the cap - report as indeterminate
+                # rather than silently showing a misleadingly precise date.
+                maturity_uncertain = True
 
         return {
             "crop_name": crop_info["name"],
@@ -151,7 +204,8 @@ class PhenologyGDDEngine:
             "progress_pct": progress_pct,
             "current_stage": current_stage,
             "all_stages": stages_response,
-            "projected_maturity_date": projected_maturity_date
+            "projected_maturity_date": projected_maturity_date,
+            "maturity_uncertain": maturity_uncertain
         }
 
 phenology_engine = PhenologyGDDEngine()

@@ -1,13 +1,14 @@
 from datetime import date, datetime
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field as PydanticField
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, JSON
 from app.core.database import Base
 
 class FieldEntity(Base):
     __tablename__ = "fields"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(36), nullable=True, index=True)  # Supabase auth.users.id (UUID)
     name = Column(String(100), nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
@@ -17,6 +18,28 @@ class FieldEntity(Base):
     planting_date = Column(String(10), nullable=False)    # YYYY-MM-DD
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class UserProfileEntity(Base):
+    """App-specific data about a Supabase-authenticated user (tier, limits).
+    Supabase's own auth.users table holds email/login history; we don't touch
+    that table directly, we just reference its id."""
+    __tablename__ = "user_profiles"
+
+    user_id = Column(String(36), primary_key=True)  # Supabase auth.users.id
+    tier = Column(String(20), default="free")  # "free" | "premium"
+    field_limit_override = Column(Integer, nullable=True)  # admin can grant a custom limit
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class UsageEventEntity(Base):
+    """Lightweight product-analytics log: what crops people check, how often
+    they recalculate, etc. - used for the admin usage dashboard."""
+    __tablename__ = "usage_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(36), nullable=False, index=True)
+    event_type = Column(String(50), nullable=False, index=True)  # e.g. "field_created", "stress_analyzed"
+    event_metadata = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 # Pydantic Schemas
 
@@ -36,6 +59,30 @@ class FieldResponseSchema(FieldCreateSchema):
 
     class Config:
         from_attributes = True
+
+class FieldUsageSummarySchema(BaseModel):
+    used: int
+    limit: int
+    tier: str
+
+class AdminUserSummarySchema(BaseModel):
+    id: str
+    email: str
+    created_at: Optional[str] = None
+    last_sign_in_at: Optional[str] = None
+    tier: str
+    field_count: int
+
+class AdminUsersResponseSchema(BaseModel):
+    users: List[AdminUserSummarySchema]
+    note: Optional[str] = None
+
+class AdminUsageSummarySchema(BaseModel):
+    total_events: int
+    total_fields: int
+    total_users: int
+    events_by_type: Dict[str, int]
+    top_crops: Dict[str, int]
 
 class WeatherDaySchema(BaseModel):
     date: str
@@ -81,7 +128,8 @@ class PhenologyStatusSchema(BaseModel):
     progress_pct: float
     current_stage: GrowthStageSchema
     all_stages: List[GrowthStageSchema]
-    projected_maturity_date: str
+    projected_maturity_date: Optional[str] = None
+    maturity_uncertain: bool = False  # True if the crop wouldn't reach maturity within a realistic simulation window
 
 class StressDetailSchema(BaseModel):
     stress_type: str  # heat, frost, high_vpd, low_vpd, drought, waterlogging

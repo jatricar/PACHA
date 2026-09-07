@@ -1,7 +1,9 @@
 import React from "react";
 import { ThermometerSun, Snowflake, Wind, CloudRain, Droplets, ShieldAlert } from "lucide-react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 export function StressRiskRadar({ stresses }) {
+  const { t } = useLanguage();
   if (!stresses || stresses.length === 0) return null;
 
   const getIcon = (type) => {
@@ -38,14 +40,14 @@ export function StressRiskRadar({ stresses }) {
 
   return (
     <div className="glass-card" style={{ padding: "1.25rem" }}>
-      
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
         <div>
           <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "#f43f5e", fontWeight: "700" }}>
-            Real-Time Diagnostic Engine
+            {t("stress.sectionTitle")}
           </span>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#ffffff", margin: "0.15rem 0" }}>
-            Abiotic Plant Stress Risk Matrix
+            {t("stress.matrixTitle")}
           </h2>
         </div>
       </div>

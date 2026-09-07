@@ -1,7 +1,9 @@
 import React from "react";
-import { Sparkles, FlaskConical, Clock, CheckCircle, Printer } from "lucide-react";
+import { Sparkles, FlaskConical, Clock, Printer } from "lucide-react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 export function RecommendationCard({ recommendations, fieldInfo }) {
+  const { t } = useLanguage();
   if (!recommendations || recommendations.length === 0) return null;
 
   const handlePrint = () => {
@@ -10,23 +12,23 @@ export function RecommendationCard({ recommendations, fieldInfo }) {
 
   return (
     <div className="glass-card" style={{ padding: "1.25rem" }}>
-      
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
         <div>
           <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "#10b981", fontWeight: "700" }}>
-            Agronomic Anti-Stress Action Plan
+            {t("recommendations.sectionTitle")}
           </span>
           <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#ffffff", margin: "0.15rem 0" }}>
-            Scientifically Proved Anti-Stress Product Advisory
+            {t("recommendations.title")}
           </h2>
           <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-            Biostimulant & Nutritional Mitigants Tailored to Phenology Stage and Stress Severity
+            {t("recommendations.subtitle")}
           </p>
         </div>
 
         <button onClick={handlePrint} className="btn-outline no-print">
           <Printer size={16} />
-          <span>Print Advisory Report</span>
+          <span>{t("recommendations.printButton")}</span>
         </button>
       </div>
 
@@ -41,7 +43,7 @@ export function RecommendationCard({ recommendations, fieldInfo }) {
               background: "rgba(15, 23, 42, 0.85)"
             }}
           >
-            
+
             {/* Title Bar */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
               <div>
@@ -65,7 +67,7 @@ export function RecommendationCard({ recommendations, fieldInfo }) {
                 fontSize: "0.8rem",
                 fontWeight: "600"
               }}>
-                Dosage: {rec.dosage}
+                {t("recommendations.dosage")}: {rec.dosage}
               </div>
             </div>
 
@@ -74,7 +76,7 @@ export function RecommendationCard({ recommendations, fieldInfo }) {
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#94a3b8", fontSize: "0.75rem", fontWeight: "600", marginBottom: "0.3rem" }}>
                   <FlaskConical size={14} />
-                  <span>ACTIVE INGREDIENTS</span>
+                  <span>{t("recommendations.activeIngredients")}</span>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
                   {rec.active_ingredients?.map((ing, i) => (
@@ -88,7 +90,7 @@ export function RecommendationCard({ recommendations, fieldInfo }) {
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#f59e0b", fontSize: "0.75rem", fontWeight: "600", marginBottom: "0.3rem" }}>
                   <Clock size={14} />
-                  <span>APPLICATION WINDOW</span>
+                  <span>{t("recommendations.applicationWindow")}</span>
                 </div>
                 <div style={{ fontSize: "0.8rem", color: "#e2e8f0" }}>
                   {rec.application_window}
@@ -99,7 +101,7 @@ export function RecommendationCard({ recommendations, fieldInfo }) {
             {/* Biological Mode of Action */}
             <div style={{ background: "rgba(16, 185, 129, 0.05)", border: "1px solid rgba(16, 185, 129, 0.15)", padding: "0.75rem 1rem", borderRadius: "8px" }}>
               <span style={{ fontSize: "0.75rem", color: "#10b981", fontWeight: "700", display: "block", marginBottom: "0.2rem" }}>
-                SCIENTIFIC RATIONALE & BIOLOGICAL MODE OF ACTION:
+                {t("recommendations.rationale")}
               </span>
               <p style={{ fontSize: "0.825rem", color: "#cbd5e1", lineHeight: "1.45" }}>
                 {rec.scientific_rationale}

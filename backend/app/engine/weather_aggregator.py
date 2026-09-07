@@ -1,10 +1,13 @@
 import asyncio
+import logging
 import math
 import time
 from datetime import datetime, timedelta, timezone, date as date_cls
 from typing import List, Dict, Any, Optional, Tuple
 
 import httpx
+
+logger = logging.getLogger("pacha.weather")
 
 # Identify the app to MET Norway / NOAA per their API usage policies.
 # (MET Norway requires a descriptive User-Agent; NWS requires one too.)
@@ -34,7 +37,10 @@ def calculate_hargreaves_pet(temp_max: float, temp_min: float, temp_avg: float, 
 class WeatherAggregatorEngine:
     def __init__(self):
         self.timeout = 10.0
+        self.gdd_series_timeout = 20.0  # wider date-range responses need more time
         self.era5_timeout = 45.0
+        self.fetch_retry_attempts = 2
+        self.fetch_retry_delay = 1.5
         # In-memory cache for the 30-year ERA5 climatology so we don't
         # re-download ~30 years of daily data on every single request.
         self._era5_cache: Dict[str, Dict[str, Any]] = {}
@@ -44,13 +50,33 @@ class WeatherAggregatorEngine:
         self._gdd_series_cache: Dict[str, Dict[str, Any]] = {}
         self._gdd_series_cache_ttl_seconds = 6 * 3600  # 6h
 
+    async def _fetch_with_retries(self, coro_func, *args, **kwargs):
+        """Calls coro_func with a couple of retries on transient failures
+        (timeouts, connection resets, brief rate-limit blips), logging every
+        failed attempt so the real cause is visible in server logs instead of
+        being silently swallowed."""
+        last_exc = None
+        for attempt in range(1, self.fetch_retry_attempts + 1):
+            try:
+                return await coro_func(*args, **kwargs)
+            except Exception as e:
+                last_exc = e
+                logger.warning(
+                    "%s failed (attempt %d/%d): %s: %s",
+                    getattr(coro_func, "__name__", str(coro_func)),
+                    attempt, self.fetch_retry_attempts, type(e).__name__, e
+                )
+                if attempt < self.fetch_retry_attempts:
+                    await asyncio.sleep(self.fetch_retry_delay)
+        raise last_exc
+
     # ------------------------------------------------------------------
     # Source 1: Open-Meteo forecast (global coverage)
     # ------------------------------------------------------------------
     async def fetch_open_meteo_forecast(self, lat: float, lon: float) -> Dict[str, Dict[str, Any]]:
         return await self._fetch_open_meteo_daily(lat, lon, past_days=0, forecast_days=7)
 
-    async def _fetch_open_meteo_daily(self, lat: float, lon: float, past_days: int = 0, forecast_days: int = 7) -> Dict[str, Dict[str, Any]]:
+    async def _fetch_open_meteo_daily(self, lat: float, lon: float, past_days: int = 0, forecast_days: int = 7, timeout: Optional[float] = None) -> Dict[str, Dict[str, Any]]:
         """Open-Meteo's forecast endpoint also serves recently-observed actuals
         via `past_days` (up to 92), which is real recorded weather, not a
         prediction - this is what lets us backfill GDD accumulation with real
@@ -62,7 +88,7 @@ class WeatherAggregatorEngine:
             "relative_humidity_2m_mean,precipitation_sum"
             f"&past_days={past_days}&forecast_days={forecast_days}&timezone=auto"
         )
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout or self.timeout) as client:
             resp = await client.get(url)
             resp.raise_for_status()
             data = resp.json()
@@ -270,7 +296,8 @@ class WeatherAggregatorEngine:
         try:
             data = await coro_func(lat, lon)
             return (name, data if data else None)
-        except Exception:
+        except Exception as e:
+            logger.warning("Weather source '%s' failed for (%s, %s): %s: %s", name, lat, lon, type(e).__name__, e)
             return (name, None)
 
     async def get_7day_ensemble_forecast(self, lat: float, lon: float) -> List[Dict[str, Any]]:
@@ -346,11 +373,15 @@ class WeatherAggregatorEngine:
             return cached["data"]
 
         try:
-            monthly = await self._fetch_era5_monthly_climatology(lat, lon, years)
+            monthly = await self._fetch_with_retries(self._fetch_era5_monthly_climatology, lat, lon, years)
             monthly["_meta"] = {"data_source": "era5_archive", "years_used": years}
             self._era5_cache[cache_key] = {"data": monthly, "fetched_at": time.time()}
             return monthly
-        except Exception:
+        except Exception as e:
+            logger.error(
+                "get_historical_baseline: ERA5 climatology fetch failed after retries for (%s, %s): %s: %s",
+                lat, lon, type(e).__name__, e
+            )
             fallback = self._generate_synthetic_historical_baseline(lat, lon)
             fallback["_meta"] = {"data_source": "synthetic_fallback", "years_used": 0}
             # Cache the fallback too (briefly counted via same TTL) so a slow/down
@@ -385,21 +416,36 @@ class WeatherAggregatorEngine:
         recent_past_days = min(days_since_planting, 92)
 
         try:
-            recent = await self._fetch_open_meteo_daily(lat, lon, past_days=recent_past_days, forecast_days=7)
+            recent = await self._fetch_with_retries(
+                self._fetch_open_meteo_daily, lat, lon,
+                past_days=recent_past_days, forecast_days=7, timeout=self.gdd_series_timeout
+            )
             combined.update(recent)
-        except Exception:
-            recent = {}
+        except Exception as e:
+            logger.error(
+                "get_gdd_weather_series: Open-Meteo past_days fetch failed after retries for (%s, %s), past_days=%d: %s: %s",
+                lat, lon, recent_past_days, type(e).__name__, e
+            )
 
         if days_since_planting > 92:
             archive_end = planting_date + timedelta(days=(days_since_planting - 92 - 1))
             try:
-                older = await self._fetch_era5_raw_daily(lat, lon, planting_date, archive_end)
+                older = await self._fetch_with_retries(
+                    self._fetch_era5_raw_daily, lat, lon, planting_date, archive_end
+                )
                 # Recent (higher-quality, more current) data wins on overlap.
                 combined = {**older, **combined}
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(
+                    "get_gdd_weather_series: ERA5 archive fetch failed after retries for (%s, %s), %s..%s: %s: %s",
+                    lat, lon, planting_date, archive_end, type(e).__name__, e
+                )
 
         if not combined:
+            logger.error(
+                "get_gdd_weather_series: ALL sources failed for (%s, %s), planting_date=%s - falling back to seasonal estimate",
+                lat, lon, planting_date
+            )
             self._gdd_series_cache[cache_key] = {"data": None, "fetched_at": time.time()}
             return None
 

@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
-from app.api.endpoints import crops, fields, stress
+from app.api.endpoints import crops, fields, stress, admin
 
 # Create DB tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Abiotic Plant Stress Prediction & Advisory Engine",
+    title="PACHA - Plant Abiotic Condition and Health Algorithms",
     description="Predicts extreme temperature, VPD, waterlogging, and drought stress for the top 10 world crops and generates biostimulant recommendations.",
     version="1.0.0"
 )
@@ -24,11 +24,12 @@ app.add_middleware(
 app.include_router(crops.router, prefix="/api")
 app.include_router(fields.router, prefix="/api")
 app.include_router(stress.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 @app.get("/")
 def health_check():
     return {
         "status": "online",
-        "service": "Abiotic Plant Stress Prediction & Agronomic Advisory Engine",
+        "service": "PACHA - Plant Abiotic Condition and Health Algorithms",
         "supported_crops": 10
     }

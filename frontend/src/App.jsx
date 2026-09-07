@@ -6,30 +6,44 @@ import { StressRiskRadar } from "./components/StressRiskRadar";
 import { WeatherCharts } from "./components/WeatherCharts";
 import { RecommendationCard } from "./components/RecommendationCard";
 import { SavedFieldsBar } from "./components/SavedFieldsBar";
-import { fetchSavedFields, createField, deleteField, analyzeAdhocStress } from "./api/client";
+import { LoginScreen } from "./components/LoginScreen";
+import { AdminPage } from "./components/AdminPage";
+import { fetchSavedFields, createField, deleteField, analyzeAdhocStress, fetchUsageSummary, fetchAdminUsers } from "./api/client";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useLanguage } from "./i18n/LanguageContext";
+import { useAuth } from "./auth/AuthContext";
 
 export default function App() {
+  const { t } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
+
   const [savedFields, setSavedFields] = useState([]);
-  const [activeField, setActiveField] = useState({
-    name: "Iowa Maize Demonstration Field",
-    latitude: 41.8781,
-    longitude: -87.6298,
-    crop_id: "maize",
-    variety: "Pioneer 1197",
-    maturity_class: "medium",
-    planting_date: "2026-05-10"
-  });
+  const [activeField, setActiveField] = useState(null);
+  const [usage, setUsage] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const [stressData, setStressData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Load saved fields from API on initial mount
+  // Once signed in, load this user's own fields, usage quota, and check admin access.
   useEffect(() => {
-    loadSavedFields();
-  }, []);
+    if (user) {
+      loadSavedFields();
+      loadUsage();
+      checkAdminAccess();
+    } else {
+      // Signed out - clear everything from the previous session.
+      setSavedFields([]);
+      setActiveField(null);
+      setStressData(null);
+      setUsage(null);
+      setIsAdmin(false);
+      setShowAdmin(false);
+    }
+  }, [user]);
 
   // Run stress analysis whenever activeField changes
   useEffect(() => {
@@ -42,11 +56,41 @@ export default function App() {
     try {
       const fields = await fetchSavedFields();
       setSavedFields(fields);
-      if (fields.length > 0 && !activeField.id) {
+      if (fields.length > 0) {
         setActiveField(fields[0]);
+      } else {
+        // No saved fields yet - show a demo example so the dashboard isn't empty.
+        setActiveField({
+          name: "Demo Field",
+          latitude: 41.8781,
+          longitude: -87.6298,
+          crop_id: "maize",
+          variety: "Pioneer 1197",
+          maturity_class: "medium",
+          planting_date: "2026-05-10"
+        });
       }
     } catch (err) {
-      console.warn("Backend API offline or initial fields empty.");
+      console.warn("Could not load saved fields:", err.message);
+    }
+  };
+
+  const loadUsage = async () => {
+    try {
+      const data = await fetchUsageSummary();
+      setUsage(data);
+    } catch (err) {
+      console.warn("Could not load usage summary:", err.message);
+    }
+  };
+
+  const checkAdminAccess = async () => {
+    try {
+      await fetchAdminUsers();
+      setIsAdmin(true);
+    } catch (err) {
+      console.warn("Admin check failed (this is expected if your account isn't an admin):", err.message);
+      setIsAdmin(false);
     }
   };
 
@@ -64,7 +108,7 @@ export default function App() {
       });
       setStressData(data);
     } catch (err) {
-      setErrorMsg("Failed to connect to Abiotic Stress Backend API. Make sure FastAPI service is running on port 8000.");
+      setErrorMsg(t("app.connectionError"));
     } finally {
       setIsLoading(false);
     }
@@ -75,9 +119,13 @@ export default function App() {
       const saved = await createField(newFieldData);
       setSavedFields(prev => [saved, ...prev]);
       setActiveField(saved);
+      loadUsage();
     } catch (err) {
-      // Fallback if API offline
-      setActiveField(newFieldData);
+      if (err.status === 403) {
+        setErrorMsg(err.message);
+      } else {
+        setErrorMsg(t("app.connectionError"));
+      }
     }
   };
 
@@ -85,29 +133,52 @@ export default function App() {
     for (let f of fieldsArray) {
       try {
         await createField(f);
-      } catch (err) {}
+      } catch (err) {
+        if (err.status === 403) {
+          setErrorMsg(err.message);
+          break; // stop uploading further once the plan limit is hit
+        }
+      }
     }
     await loadSavedFields();
-    if (fieldsArray.length > 0) {
-      setActiveField(fieldsArray[0]);
-    }
+    await loadUsage();
   };
 
   const handleDeleteField = async (fieldId) => {
     try {
       await deleteField(fieldId);
       setSavedFields(prev => prev.filter(f => f.id !== fieldId));
+      loadUsage();
     } catch (err) {}
   };
 
+  // --- Auth gating ---
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader2 size={32} className="animate-spin" color="#10b981" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  if (showAdmin) {
+    return <AdminPage onClose={() => setShowAdmin(false)} />;
+  }
+
   return (
     <div style={{ minHeight: "100vh", paddingBottom: "2rem" }}>
-      
+
       {/* Navigation Header */}
       <Navbar
         onOpenNewFieldModal={() => setIsModalOpen(true)}
         onRefresh={() => runAnalysis(activeField)}
         isLoading={isLoading}
+        isAdmin={isAdmin}
+        onOpenAdmin={() => setShowAdmin(true)}
       />
 
       {/* Saved Fields Quick Bar */}
@@ -116,9 +187,10 @@ export default function App() {
         activeFieldId={activeField?.id}
         onSelectField={(f) => setActiveField(f)}
         onDeleteField={handleDeleteField}
+        usage={usage}
       />
 
-      {/* Error Alert Banner if Backend Unreachable */}
+      {/* Error Alert Banner if Backend Unreachable / Plan Limit Reached */}
       {errorMsg && (
         <div style={{
           margin: "0 1rem 1rem 1rem",
@@ -142,11 +214,11 @@ export default function App() {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "350px", gap: "1rem" }}>
           <Loader2 size={40} className="animate-spin" color="#10b981" />
           <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
-            Querying 3-Source Forecast Ensemble, ERA5 Historical Climate, and GDD Phenology...
+            {t("app.loading")}
           </p>
         </div>
       ) : stressData ? (
-        
+
         <main style={{ display: "flex", flexDirection: "column", gap: "1.25rem", padding: "0 1rem" }}>
 
           {/* Data provenance banner: warns when weather/climate data is a
@@ -168,10 +240,10 @@ export default function App() {
               <AlertCircle size={16} />
               <span>
                 {stressData.weather_data_source === "synthetic_fallback" && stressData.historical_data_source === "synthetic_fallback"
-                  ? "El pronóstico y el histórico climático no se pudieron obtener en vivo (sin conexión a Open-Meteo / MET Norway / NWS / ERA5). Se muestra una estimación sintética basada en latitud — no es clima real."
+                  ? t("app.weatherFallbackBoth")
                   : stressData.weather_data_source === "synthetic_fallback"
-                  ? "El pronóstico de 7 días no se pudo obtener en vivo. Se muestra una estimación sintética basada en latitud — no es clima real."
-                  : "El histórico climático (ERA5) no se pudo obtener en vivo. Se muestra una estimación sintética basada en latitud — no es clima histórico real."}
+                  ? t("app.weatherFallbackForecast")
+                  : t("app.weatherFallbackHistorical")}
               </span>
             </div>
           )}
@@ -188,7 +260,7 @@ export default function App() {
               fontSize: "0.85rem"
             }}>
               <AlertCircle size={16} />
-              <span>Pronóstico en vivo, pero solo 1 de las 3 fuentes meteorológicas respondió para esta ubicación (normal fuera de EE.UU., donde NWS no cubre).</span>
+              <span>{t("app.weatherPartialLive")}</span>
             </div>
           )}
 

@@ -99,6 +99,60 @@ def test_stress_analyzer_uses_real_crop_frost_threshold():
     frost_maize = next(s for s in stresses_maize if s["stress_type"] == "frost")
     assert frost_maize["severity"] == "None"
 
+def test_harvest_projection_uses_seasonal_data_not_flat_rate():
+    """Regression test for the harvest-date bug: barley planted in early winter
+    (Southern Hemisphere) must NOT project maturity using a flat, near-optimal
+    daily GDD rate (the old bug: avg_daily_gdd_rate = (t_opt - t_base) * 0.6,
+    applied every single day regardless of season). With a realistic winter->
+    spring climatology, harvest should land months out, not ~4.5 months as the
+    old bug produced (Jun 15 planting -> Oct 29 "harvest", which is what
+    triggered this fix)."""
+    from datetime import datetime
+    from app.engine.phenology_gdd import phenology_engine
+
+    mar_del_plata_lat = -38.0
+    realistic_hist_baseline = {
+        "6": {"hist_temp_max": 12.5, "hist_temp_min": 5.0},
+        "7": {"hist_temp_max": 12.0, "hist_temp_min": 4.5},
+        "8": {"hist_temp_max": 13.0, "hist_temp_min": 5.0},
+        "9": {"hist_temp_max": 15.0, "hist_temp_min": 6.5},
+        "10": {"hist_temp_max": 18.0, "hist_temp_min": 9.0},
+        "11": {"hist_temp_max": 21.0, "hist_temp_min": 11.5},
+        "12": {"hist_temp_max": 23.0, "hist_temp_min": 13.5},
+    }
+
+    result = phenology_engine.evaluate_field_phenology(
+        crop_id="barley",
+        planting_date_str="2026-06-15",
+        current_date_str="2026-08-25",
+        lat=mar_del_plata_lat,
+        historical_baseline=realistic_hist_baseline,
+    )
+
+    assert result["maturity_uncertain"] is False
+    assert result["projected_maturity_date"] is not None
+    harvest_date = datetime.strptime(result["projected_maturity_date"], "%Y-%m-%d")
+    # The old flat-rate bug produced 2026-10-29 for this exact case. A
+    # realistic winter->spring accumulation should push this meaningfully later.
+    assert harvest_date > datetime(2026, 11, 1)
+
+def test_harvest_projection_reports_uncertain_when_maturity_never_reached():
+    """A tropical crop stuck in a climate too cold to ever accumulate enough
+    GDD should report maturity_uncertain=True rather than silently returning a
+    misleading date far in the future."""
+    from app.engine.phenology_gdd import phenology_engine
+
+    frigid_baseline = {str(m): {"hist_temp_max": 2.0, "hist_temp_min": -3.0} for m in range(1, 13)}
+    result = phenology_engine.evaluate_field_phenology(
+        crop_id="oil_palm",  # t_base=15.0 - essentially never accumulates GDD in a frigid climate
+        planting_date_str="2026-01-01",
+        current_date_str="2026-01-15",
+        lat=60.0,
+        historical_baseline=frigid_baseline,
+    )
+    assert result["maturity_uncertain"] is True
+    assert result["projected_maturity_date"] is None
+
 def test_phenology_respects_southern_hemisphere_winter():
     """Regression test for the Mar del Plata bug: a Southern Hemisphere field
     planted in autumn/winter (Jun-Aug) must NOT be estimated as if it were in

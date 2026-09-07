@@ -1,20 +1,19 @@
 import React, { useState } from "react";
-import { X, Navigation, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, Navigation, Upload, CheckCircle2 } from "lucide-react";
+import { useLanguage } from "../i18n/LanguageContext";
 
-const TOP_10_CROPS = [
-  { id: "maize", name: "Maize (Corn)", icon: "🌽" },
-  { id: "sugarcane", name: "Sugarcane", icon: "🎋" },
-  { id: "wheat", name: "Wheat", icon: "🌾" },
-  { id: "rice", name: "Rice", icon: "🍚" },
-  { id: "potato", name: "Potato", icon: "🥔" },
-  { id: "sugar_beet", name: "Sugar Beet", icon: "🍠" },
-  { id: "soybean", name: "Soybean", icon: "🫘" },
-  { id: "cassava", name: "Cassava", icon: "🥔" },
-  { id: "oil_palm", name: "Oil Palm", icon: "🌴" },
-  { id: "barley", name: "Barley", icon: "🌾" }
+const CROP_IDS_IN_ORDER = [
+  "maize", "sugarcane", "wheat", "rice", "potato",
+  "sugar_beet", "soybean", "cassava", "oil_palm", "barley"
 ];
 
+const CROP_ICONS = {
+  maize: "🌽", sugarcane: "🎋", wheat: "🌾", rice: "🍚", potato: "🥔",
+  sugar_beet: "🍠", soybean: "🫘", cassava: "🥔", oil_palm: "🌴", barley: "🌾"
+};
+
 export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("single");
   const [formData, setFormData] = useState({
     name: "Field Alpha",
@@ -44,12 +43,12 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
           setGeoLocating(false);
         },
         () => {
-          alert("Unable to retrieve GPS location. Please enter manually.");
+          alert(t("fieldModal.gpsError"));
           setGeoLocating(false);
         }
       );
     } else {
-      alert("Geolocation is not supported by your browser.");
+      alert(t("fieldModal.gpsUnsupported"));
     }
   };
 
@@ -62,8 +61,7 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
   const handleBatchSubmit = (e) => {
     e.preventDefault();
     if (!csvText.trim()) return;
-    
-    // Parse CSV lines
+
     const lines = csvText.trim().split("\n");
     const fieldsParsed = [];
     for (let line of lines) {
@@ -84,7 +82,7 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
       onBatchUpload(fieldsParsed);
       onClose();
     } else {
-      alert("Invalid CSV format. Please ensure CSV contains: name,latitude,longitude,crop_id,planting_date");
+      alert(t("fieldModal.batchInvalid"));
     }
   };
 
@@ -104,12 +102,12 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
       padding: "1rem"
     }}>
       <div className="glass-card" style={{ width: "100%", maxWidth: "600px", padding: "1.5rem", borderRadius: "20px" }}>
-        
+
         {/* Modal Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
           <div>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: "700", color: "#ffffff" }}>Add Field Location & Crop</h2>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Upload coordinates via GPS or smartphone/computer batch CSV</p>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: "700", color: "#ffffff" }}>{t("fieldModal.title")}</h2>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{t("fieldModal.subtitle")}</p>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
             <X size={20} />
@@ -132,7 +130,7 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
               cursor: "pointer"
             }}
           >
-            Single Field Entry
+            {t("fieldModal.tabSingle")}
           </button>
           <button
             onClick={() => setActiveTab("batch")}
@@ -148,16 +146,16 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
               cursor: "pointer"
             }}
           >
-            CSV Batch Upload
+            {t("fieldModal.tabBatch")}
           </button>
         </div>
 
         {activeTab === "single" ? (
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            
+
             {/* Field Name */}
             <div>
-              <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Field Name / Identifier</label>
+              <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.fieldName")}</label>
               <input
                 className="input-glass"
                 type="text"
@@ -170,7 +168,7 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
             {/* Coordinates & GPS */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "0.75rem", alignItems: "end" }}>
               <div>
-                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Latitude</label>
+                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.latitude")}</label>
                 <input
                   className="input-glass"
                   type="number"
@@ -181,7 +179,7 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
                 />
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Longitude</label>
+                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.longitude")}</label>
                 <input
                   className="input-glass"
                   type="number"
@@ -196,25 +194,25 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
                 onClick={handleGetLocation}
                 className="btn-outline"
                 style={{ padding: "0.6rem 0.8rem" }}
-                title="Detect Smartphone / Device GPS Location"
+                title={t("fieldModal.gpsTitle")}
               >
                 <Navigation size={16} />
-                <span>{geoLocating ? "Locating..." : "GPS"}</span>
+                <span>{geoLocating ? t("fieldModal.gpsLocating") : t("fieldModal.gpsButton")}</span>
               </button>
             </div>
 
             {/* Crop Selector */}
             <div>
-              <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Plant Species (Top 10 Global Crops)</label>
+              <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.cropSpecies")}</label>
               <select
                 className="input-glass"
                 value={formData.crop_id}
                 onChange={e => setFormData({ ...formData, crop_id: e.target.value })}
                 style={{ background: "rgba(15, 23, 42, 0.95)" }}
               >
-                {TOP_10_CROPS.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.icon} {c.name}
+                {CROP_IDS_IN_ORDER.map(id => (
+                  <option key={id} value={id}>
+                    {CROP_ICONS[id]} {t(`crops.${id}`)}
                   </option>
                 ))}
               </select>
@@ -223,32 +221,32 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
             {/* Variety & Maturity & Planting Date */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
               <div>
-                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Variety / Hybrid Name</label>
+                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.variety")}</label>
                 <input
                   className="input-glass"
                   type="text"
                   value={formData.variety}
                   onChange={e => setFormData({ ...formData, variety: e.target.value })}
-                  placeholder="e.g. Pioneer 1197"
+                  placeholder={t("fieldModal.varietyPlaceholder")}
                 />
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Maturity Class</label>
+                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.maturityClass")}</label>
                 <select
                   className="input-glass"
                   value={formData.maturity_class}
                   onChange={e => setFormData({ ...formData, maturity_class: e.target.value })}
                   style={{ background: "rgba(15, 23, 42, 0.95)" }}
                 >
-                  <option value="early">Early Maturity (85% GDD)</option>
-                  <option value="medium">Medium Maturity (100% GDD)</option>
-                  <option value="late">Late Maturity (115% GDD)</option>
+                  <option value="early">{t("fieldModal.maturityEarly")}</option>
+                  <option value="medium">{t("fieldModal.maturityMedium")}</option>
+                  <option value="late">{t("fieldModal.maturityLate")}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Planting Date</label>
+              <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.plantingDate")}</label>
               <input
                 className="input-glass"
                 type="date"
@@ -260,7 +258,7 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
 
             <button type="submit" className="btn-emerald" style={{ marginTop: "0.5rem", justifyContent: "center" }}>
               <CheckCircle2 size={18} />
-              <span>Save & Analyze Crop Field</span>
+              <span>{t("fieldModal.submitButton")}</span>
             </button>
 
           </form>
@@ -268,20 +266,20 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
           <form onSubmit={handleBatchSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
               <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>
-                Paste CSV Content (Format: name, latitude, longitude, crop_id, planting_date, variety, maturity)
+                {t("fieldModal.batchLabel")}
               </label>
               <textarea
                 className="input-glass"
                 rows={6}
                 value={csvText}
                 onChange={e => setCsvText(e.target.value)}
-                placeholder={"Field North, 41.8781, -87.6298, maize, 2026-05-10, Pioneer 1197, medium\nField South, -12.5500, -55.7200, soybean, 2026-10-15, M7739, early"}
+                placeholder={t("fieldModal.batchPlaceholder")}
                 style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}
               />
             </div>
             <button type="submit" className="btn-emerald" style={{ justifyContent: "center" }}>
               <Upload size={18} />
-              <span>Batch Upload Fields</span>
+              <span>{t("fieldModal.batchSubmit")}</span>
             </button>
           </form>
         )}

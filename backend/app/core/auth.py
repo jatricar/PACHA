@@ -14,7 +14,11 @@ def _get_jwks_client() -> Optional[PyJWKClient]:
     """Lazily builds (and caches) a client for Supabase's JWKS endpoint,
     which serves whichever signing keys are currently active for the
     project - asymmetric (ES256/RS256) or an imported legacy HS256 secret.
-    Supabase's gateway requires an `apikey` header on this endpoint too."""
+    Supabase's gateway requires an `apikey` header on this endpoint too.
+
+    IMPORTANT: the correct path is /auth/v1/.well-known/jwks.json - NOT
+    /auth/v1/jwks (that one 404s). Got this wrong once already; if this
+    endpoint ever returns 404 again, that's the first thing to check."""
     global _jwks_client
     if _jwks_client is None and SUPABASE_URL:
         if not SUPABASE_ANON_KEY:
@@ -102,8 +106,8 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> CurrentUser
 
 
 def require_admin(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-    """FastAPI dependency: same as get_current_user, but additionally requires
-    the user's email to be in ADMIN_EMAILS. Raises 403 otherwise."""
+    """Same as get_current_user, but additionally requires the user's email
+    to be in ADMIN_EMAILS. Raises 403 otherwise."""
     if not current_user.is_admin():
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user

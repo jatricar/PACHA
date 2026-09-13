@@ -124,6 +124,37 @@ body {
   box-shadow: 0 0 0 2px var(--primary-emerald-glow);
 }
 
+/* Used by Navbar's recalculate icon and the map search button - was
+   referenced in both places but never actually defined anywhere. */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Leaflet's default light control chrome (zoom buttons, attribution strip)
+   clashes with PACHA's dark glass UI - restyle to match instead of leaving
+   OpenStreetMap's stock white boxes floating on the map. */
+.leaflet-container {
+  font-family: var(--font-main);
+}
+.leaflet-control-zoom a {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-glass) !important;
+}
+.leaflet-control-zoom a:hover {
+  background: rgba(30, 41, 59, 0.95) !important;
+}
+.leaflet-control-attribution {
+  background: rgba(7, 13, 23, 0.75) !important;
+  color: var(--text-subtle) !important;
+}
+.leaflet-control-attribution a {
+  color: var(--text-muted) !important;
+}
+
 /* Badges */
 .badge {
   display: inline-flex;

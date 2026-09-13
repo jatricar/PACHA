@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Navigation, Upload, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
+import { LocationMapPicker } from "./LocationMapPicker";
 
 const CROP_IDS_IN_ORDER = [
   "maize", "sugarcane", "wheat", "rice", "potato",
@@ -165,7 +166,17 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
               />
             </div>
 
-            {/* Coordinates & GPS */}
+            {/* Location: interactive map (search, click, or drag the pin) */}
+            <div>
+              <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.locationLabel")}</label>
+              <LocationMapPicker
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onChange={(latitude, longitude) => setFormData(prev => ({ ...prev, latitude, longitude }))}
+              />
+            </div>
+
+            {/* Coordinates fine-tune & GPS - stays in sync with the map above */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "0.75rem", alignItems: "end" }}>
               <div>
                 <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>{t("fieldModal.latitude")}</label>

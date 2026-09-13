@@ -9,6 +9,11 @@ from app.engine.usage_tracking import log_usage_event
 
 router = APIRouter(prefix="/fields", tags=["Fields"])
 
+# Sentinel "limit" value returned to admins, who have no real field cap.
+# The frontend recognizes tier == "admin" and renders an infinity symbol
+# instead of this number, so its exact value never surfaces to the user.
+UNLIMITED_SENTINEL = 999_999
+
 
 def _get_or_create_profile(db: Session, user_id: str) -> UserProfileEntity:
     profile = db.query(UserProfileEntity).filter(UserProfileEntity.user_id == user_id).first()
@@ -32,16 +37,22 @@ def create_field(
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    """Create a new saved crop field, owned by the authenticated user."""
-    profile = _get_or_create_profile(db, current_user.id)
-    limit = _field_limit_for(profile)
-    current_count = db.query(FieldEntity).filter(FieldEntity.user_id == current_user.id).count()
+    """Create a new saved crop field, owned by the authenticated user.
 
-    if current_count >= limit:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Field limit reached ({limit} fields for your '{profile.tier}' plan). Contact the admin to upgrade."
-        )
+    Admins (ADMIN_EMAILS) are exempt from the freemium/premium field limit
+    entirely, so the owner can freely test the app with as many fields as
+    needed without having to grant themselves a premium override."""
+    profile = _get_or_create_profile(db, current_user.id)
+
+    if not current_user.is_admin():
+        limit = _field_limit_for(profile)
+        current_count = db.query(FieldEntity).filter(FieldEntity.user_id == current_user.id).count()
+
+        if current_count >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Field limit reached ({limit} fields for your '{profile.tier}' plan). Contact the admin to upgrade."
+            )
 
     field_item = FieldEntity(**field_data.model_dump(), user_id=current_user.id)
     db.add(field_item)
@@ -71,9 +82,16 @@ def get_usage_summary(
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    """Used/limit/tier info for the frontend's 'X/5 fields used' indicator."""
+    """Used/limit/tier info for the frontend's 'X/5 fields used' indicator.
+
+    Admins get tier="admin" and an effectively unlimited limit (the frontend
+    renders this as an infinity symbol instead of a number)."""
     profile = _get_or_create_profile(db, current_user.id)
     used = db.query(FieldEntity).filter(FieldEntity.user_id == current_user.id).count()
+
+    if current_user.is_admin():
+        return FieldUsageSummarySchema(used=used, limit=UNLIMITED_SENTINEL, tier="admin")
+
     return FieldUsageSummarySchema(used=used, limit=_field_limit_for(profile), tier=profile.tier)
 
 

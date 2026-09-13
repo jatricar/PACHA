@@ -32,7 +32,8 @@ export function SavedFieldsBar({ savedFields, activeFieldId, onSelectField, onDe
   if (!savedFields || savedFields.length === 0) return null;
 
   const activeField = savedFields.find(f => f.id === activeFieldId) || savedFields[0];
-  const usageNearLimit = usage && usage.used >= usage.limit;
+  const isAdminUsage = usage && usage.tier === "admin";
+  const usageNearLimit = usage && !isAdminUsage && usage.used >= usage.limit;
 
   const toggleOpen = () => {
     if (!open && btnRef.current) {
@@ -77,7 +78,7 @@ export function SavedFieldsBar({ savedFields, activeFieldId, onSelectField, onDe
           whiteSpace: "nowrap",
           color: usageNearLimit ? "#f59e0b" : "var(--text-muted)"
         }}>
-          {t("savedFields.usage", { used: usage.used, limit: usage.limit, tier: usage.tier })}
+          {t("savedFields.usage", { used: usage.used, limit: isAdminUsage ? "\u221e" : usage.limit, tier: usage.tier })}
         </span>
       )}
 

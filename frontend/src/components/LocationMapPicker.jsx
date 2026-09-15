@@ -37,7 +37,10 @@ function FlyToLocation({ lat, lon, flyKey }) {
   const map = useMap();
   useEffect(() => {
     if (flyKey === 0) return;
-    map.flyTo([lat, lon], Math.max(map.getZoom(), 6), { duration: 0.8 });
+    // Zoom in close enough to tell neighboring fields apart (roughly
+    // parcel-level, not just which town) - a plain city-level zoom after a
+    // search or GPS fix isn't enough to pick the right field on satellite imagery.
+    map.flyTo([lat, lon], Math.max(map.getZoom(), 14), { duration: 0.8 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flyKey]);
   return null;
@@ -128,12 +131,20 @@ export function LocationMapPicker({ latitude, longitude, onChange }) {
         <MapContainer
           center={[latitude, longitude]}
           zoom={5}
-          style={{ height: "220px", width: "100%", background: "var(--bg-dark)" }}
+          style={{ height: "280px", width: "100%", background: "var(--bg-dark)" }}
           scrollWheelZoom={true}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={19}
+          />
+          {/* Roads, towns and field boundaries drawn on top of the satellite
+              photo - without this the imagery alone gives no reference points
+              to tell neighboring fields apart, same as plain aerial photos. */}
+          <TileLayer
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={19}
           />
           <Marker
             position={[latitude, longitude]}

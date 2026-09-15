@@ -74,7 +74,12 @@ export const translations = {
       maturityGddReq: "GDD REQ. MADUREZ",
       currentStage: "ETAPA ACTUAL",
       seasonProgress: "Progreso de la Temporada del Cultivo",
-      completed: "Completado"
+      completed: "Completado",
+      phaseGermination: "Germinación",
+      phaseGrowth: "Crecimiento",
+      phaseFlowering: "Floración",
+      phaseFilling: "Llenado",
+      phaseRipening: "Maduración"
     },
     stress: {
       sectionTitle: "Motor de Diagnóstico en Tiempo Real",
@@ -209,7 +214,12 @@ export const translations = {
       maturityGddReq: "MATURITY GDD REQ.",
       currentStage: "CURRENT STAGE",
       seasonProgress: "Crop Development Season Progress",
-      completed: "Completed"
+      completed: "Completed",
+      phaseGermination: "Germination",
+      phaseGrowth: "Growth",
+      phaseFlowering: "Flowering",
+      phaseFilling: "Filling",
+      phaseRipening: "Ripening"
     },
     stress: {
       sectionTitle: "Real-Time Diagnostic Engine",

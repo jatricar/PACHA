@@ -1,6 +1,7 @@
 import React from "react";
-import { Clock, Calendar, Flame, Target, Award, DatabaseZap } from "lucide-react";
+import { Calendar, Flame, Target, Award, DatabaseZap } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
+import { PhenologyTimeline } from "./PhenologyTimeline";
 
 export function PhenologyGauge({ phenology }) {
   const { t } = useLanguage();
@@ -118,28 +119,10 @@ export function PhenologyGauge({ phenology }) {
           }} />
         </div>
 
-        {/* BBCH Stage Timeline Nodes */}
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${all_stages?.length || 4}, 1fr)`, gap: "0.5rem" }}>
-          {all_stages?.map((stg, idx) => (
-            <div
-              key={idx}
-              style={{
-                background: stg.is_current ? "rgba(16, 185, 129, 0.2)" : stg.is_completed ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.2)",
-                border: stg.is_current ? "1px solid #10b981" : "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "8px",
-                padding: "0.5rem",
-                textAlign: "center"
-              }}
-            >
-              <div style={{ fontSize: "0.7rem", color: stg.is_current ? "#10b981" : "var(--text-subtle)", fontWeight: "700" }}>
-                BBCH {stg.bbch}
-              </div>
-              <div style={{ fontSize: "0.75rem", color: stg.is_current ? "#ffffff" : "var(--text-muted)", fontWeight: stg.is_current ? "700" : "400", marginTop: "0.15rem" }}>
-                {stg.name}
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* BBCH Stage Timeline - illustrated: icons per growth phase, positioned
+            by how much of the season each stage actually spans, plus a "you
+            are here" marker at the exact GDD% within the current phase. */}
+        <PhenologyTimeline stages={all_stages} progressPct={progress_pct} />
 
       </div>
 

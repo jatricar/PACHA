@@ -29,6 +29,16 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
   const [geoLocating, setGeoLocating] = useState(false);
   const [csvText, setCsvText] = useState("");
 
+  // Lock background scroll while the modal is open - otherwise, on a form
+  // this tall, the mouse wheel scrolls the page behind the modal instead of
+  // the modal's own content, making everything below the map unreachable.
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleGetLocation = () => {
@@ -100,9 +110,10 @@ export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: "1rem"
+      padding: "1rem",
+      overflowY: "auto"
     }}>
-      <div className="glass-card" style={{ width: "100%", maxWidth: "600px", padding: "1.5rem", borderRadius: "20px" }}>
+      <div className="glass-card" style={{ width: "100%", maxWidth: "600px", padding: "1.5rem", borderRadius: "20px", maxHeight: "90vh", overflowY: "auto", margin: "auto" }}>
 
         {/* Modal Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>

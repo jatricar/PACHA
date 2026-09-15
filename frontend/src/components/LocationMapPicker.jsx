@@ -4,7 +4,6 @@ import L from "leaflet";
 import { Search, Loader2 } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import "leaflet/dist/leaflet.css";
-
 // Leaflet's default marker icon references image files by a relative path
 // that Vite's bundler doesn't resolve automatically, which silently shows a
 // broken-image icon instead of a pin. Rebuilding the icon from the same
@@ -26,6 +25,31 @@ function ClickHandler({ onPick }) {
       onPick(e.latlng.lat, e.latlng.lng);
     }
   });
+  return null;
+}
+
+/**
+ * Leaflet's built-in scrollWheelZoom grabs every wheel event over the map,
+ * which - since this map sits mid-form inside a scrollable modal - blocks
+ * the user from scrolling down past it at all. Instead, only zoom on
+ * Ctrl/Cmd+scroll (same convention as Google Maps embeds); a plain scroll
+ * passes through untouched so the modal keeps scrolling normally.
+ */
+function CtrlScrollZoom() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const onWheel = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 1 : -1;
+        map.setZoom(map.getZoom() + delta);
+      }
+      // Otherwise: do nothing, let the event bubble up so the modal scrolls.
+    };
+    container.addEventListener("wheel", onWheel, { passive: false });
+    return () => container.removeEventListener("wheel", onWheel);
+  }, [map]);
   return null;
 }
 
@@ -127,12 +151,12 @@ export function LocationMapPicker({ latitude, longitude, onChange }) {
         </p>
       )}
 
-      <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border-glass)" }}>
+      <div style={{ position: "relative", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border-glass)" }}>
         <MapContainer
           center={[latitude, longitude]}
           zoom={5}
           style={{ height: "280px", width: "100%", background: "var(--bg-dark)" }}
-          scrollWheelZoom={true}
+          scrollWheelZoom={false}
         >
           <TileLayer
             attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
@@ -159,7 +183,16 @@ export function LocationMapPicker({ latitude, longitude, onChange }) {
           />
           <ClickHandler onPick={handlePick} />
           <FlyToLocation lat={latitude} lon={longitude} flyKey={flyKey} />
+          <CtrlScrollZoom />
         </MapContainer>
+        <div style={{
+          position: "absolute", bottom: "8px", left: "8px",
+          background: "rgba(7, 13, 23, 0.75)", color: "var(--text-muted)",
+          fontSize: "0.65rem", padding: "0.2rem 0.5rem", borderRadius: "6px",
+          pointerEvents: "none", zIndex: 1000
+        }}>
+          {t("fieldModal.mapZoomHint")}
+        </div>
       </div>
 
       <p style={{ fontSize: "0.72rem", color: "var(--text-subtle)", margin: "0.4rem 0 0" }}>

@@ -4,71 +4,197 @@
       "id": "prod_seaweed_ext",
       "name": "Biostimulant Ascophyllum Nodosum Extract",
       "category": "Seaweed Extract",
-      "active_ingredients": ["Alginic Acid", "Mannitol", "Polyphenols", "Phytohormone Precursors"],
-      "target_stresses": ["heat", "drought", "high_vpd"],
+      "active_ingredients": [
+        "Alginic Acid",
+        "Mannitol",
+        "Polyphenols",
+        "Phytohormone Precursors"
+      ],
+      "target_stresses": [
+        "heat",
+        "drought",
+        "high_vpd"
+      ],
       "dosage": "1.5 - 2.5 L/ha foliar application",
       "application_window": "Apply 24-48 hours before predicted heat spike or drought period; repeat every 7-10 days under sustained stress.",
-      "scientific_rationale": "Stimulates endogenous antioxidant enzymes (Superoxide Dismutase SOD, Peroxidase POD), maintains cellular turgor, and reduces ROS accumulation during high temperature and water deficit."
+      "scientific_rationale": "Stimulates endogenous antioxidant enzymes (Superoxide Dismutase SOD, Peroxidase POD), maintains cellular turgor, and reduces ROS accumulation during high temperature and water deficit.",
+      "es": {
+        "name": "Extracto Bioestimulante de Ascophyllum Nodosum",
+        "category": "Extracto de Algas Marinas",
+        "active_ingredients": [
+          "Ácido Algínico",
+          "Manitol",
+          "Polifenoles",
+          "Precursores Fitohormonales"
+        ],
+        "dosage": "1.5 - 2.5 L/ha aplicación foliar",
+        "application_window": "Aplicar 24-48 horas antes del pico de calor o período de sequía previsto; repetir cada 7-10 días bajo estrés sostenido.",
+        "scientific_rationale": "Estimula enzimas antioxidantes endógenas (Superóxido Dismutasa SOD, Peroxidasa POD), mantiene la turgencia celular y reduce la acumulación de ROS durante altas temperaturas y déficit hídrico."
+      }
     },
     {
       "id": "prod_proline_amino",
       "name": "Free Amino Acid Complex (L-Proline & Glutamic Acid)",
       "category": "Amino Acid Biostimulant",
-      "active_ingredients": ["L-Proline (15%)", "L-Glutamic Acid (10%)", "Free Enzymatic Amino Acids"],
-      "target_stresses": ["heat", "frost", "drought"],
+      "active_ingredients": [
+        "L-Proline (15%)",
+        "L-Glutamic Acid (10%)",
+        "Free Enzymatic Amino Acids"
+      ],
+      "target_stresses": [
+        "heat",
+        "frost",
+        "drought"
+      ],
       "dosage": "1.0 - 2.0 L/ha foliar spray",
       "application_window": "Foliar application prior to or immediately following thermal or water stress events.",
-      "scientific_rationale": "L-Proline acts as a potent osmoprotectant and protein stabilizer, protecting cell membranes and enzyme complexes from heat denaturation and freeze injury."
+      "scientific_rationale": "L-Proline acts as a potent osmoprotectant and protein stabilizer, protecting cell membranes and enzyme complexes from heat denaturation and freeze injury.",
+      "es": {
+        "name": "Complejo de Aminoácidos Libres (L-Prolina y Ácido Glutámico)",
+        "category": "Bioestimulante de Aminoácidos",
+        "active_ingredients": [
+          "L-Prolina (15%)",
+          "Ácido L-Glutámico (10%)",
+          "Aminoácidos Enzimáticos Libres"
+        ],
+        "dosage": "1.0 - 2.0 L/ha aplicación foliar",
+        "application_window": "Aplicación foliar antes o inmediatamente después de eventos de estrés térmico o hídrico.",
+        "scientific_rationale": "La L-Prolina actúa como un potente osmoprotector y estabilizador de proteínas, protegiendo membranas celulares y complejos enzimáticos de la desnaturalización por calor y el daño por congelamiento."
+      }
     },
     {
       "id": "prod_glycine_betaine",
       "name": "Purified Glycine Betaine Osmo-Protectant",
       "category": "Osmolyte Biostimulant",
-      "active_ingredients": ["Glycine Betaine (97% pure)"],
-      "target_stresses": ["drought", "high_vpd", "heat"],
+      "active_ingredients": [
+        "Glycine Betaine (97% pure)"
+      ],
+      "target_stresses": [
+        "drought",
+        "high_vpd",
+        "heat"
+      ],
       "dosage": "2.0 - 4.0 kg/ha foliar application",
       "application_window": "Apply during early vegetative or reproductive stages when atmospheric demand (VPD > 1.8 kPa) or soil moisture deficit is predicted.",
-      "scientific_rationale": "Sustains cellular turgor pressure and protects photosystem II (PSII) activity without disrupting normal metabolic pathways."
+      "scientific_rationale": "Sustains cellular turgor pressure and protects photosystem II (PSII) activity without disrupting normal metabolic pathways.",
+      "es": {
+        "name": "Osmoprotector de Glicina Betaína Purificada",
+        "category": "Bioestimulante Osmolito",
+        "active_ingredients": [
+          "Glicina Betaína (97% pureza)"
+        ],
+        "dosage": "2.0 - 4.0 kg/ha aplicación foliar",
+        "application_window": "Aplicar durante etapas vegetativas tempranas o reproductivas cuando se prevé alta demanda atmosférica (VPD > 1.8 kPa) o déficit de humedad del suelo.",
+        "scientific_rationale": "Mantiene la presión de turgencia celular y protege la actividad del fotosistema II (PSII) sin alterar las vías metabólicas normales."
+      }
     },
     {
       "id": "prod_potassium_silicate",
       "name": "Soluble Potassium Silicate (Si + K)",
       "category": "Mineral Fortifier",
-      "active_ingredients": ["Silicon Dioxide (SiO2 25%)", "Potassium Oxide (K2O 12%)"],
-      "target_stresses": ["high_vpd", "drought", "heat"],
+      "active_ingredients": [
+        "Silicon Dioxide (SiO2 25%)",
+        "Potassium Oxide (K2O 12%)"
+      ],
+      "target_stresses": [
+        "high_vpd",
+        "drought",
+        "heat"
+      ],
       "dosage": "2.0 - 3.0 L/ha foliar or fertigation",
       "application_window": "Apply during active vegetative canopy expansion.",
-      "scientific_rationale": "Silicon deposits in the leaf cuticle layer, forming a physical barrier that reduces cuticular transpiration by 20-30% while Potassium enhances stoma guard cell regulation."
+      "scientific_rationale": "Silicon deposits in the leaf cuticle layer, forming a physical barrier that reduces cuticular transpiration by 20-30% while Potassium enhances stoma guard cell regulation.",
+      "es": {
+        "name": "Silicato de Potasio Soluble (Si + K)",
+        "category": "Fortificante Mineral",
+        "active_ingredients": [
+          "Dióxido de Silicio (SiO2 25%)",
+          "Óxido de Potasio (K2O 12%)"
+        ],
+        "dosage": "2.0 - 3.0 L/ha foliar o fertirriego",
+        "application_window": "Aplicar durante la expansión activa del follaje vegetativo.",
+        "scientific_rationale": "El silicio se deposita en la capa cuticular de la hoja, formando una barrera física que reduce la transpiración cuticular en un 20-30%, mientras el potasio mejora la regulación de las células oclusivas de los estomas."
+      }
     },
     {
       "id": "prod_salicylic_acid",
       "name": "Systemic Stress Primer (Salicylic Acid Formula)",
       "category": "Phytohormonal Priming Agent",
-      "active_ingredients": ["Salicylic Acid (50 mg/L active)"],
-      "target_stresses": ["heat", "frost"],
+      "active_ingredients": [
+        "Salicylic Acid (50 mg/L active)"
+      ],
+      "target_stresses": [
+        "heat",
+        "frost"
+      ],
       "dosage": "0.5 - 1.0 L/ha foliar application",
       "application_window": "Apply 48 hours in advance of extreme temperature anomalies.",
-      "scientific_rationale": "Induces Heat Shock Proteins (HSPs) and triggers Systemic Acquired Acclimatization (SAA), reducing physiological shock and flower/pod abortion."
+      "scientific_rationale": "Induces Heat Shock Proteins (HSPs) and triggers Systemic Acquired Acclimatization (SAA), reducing physiological shock and flower/pod abortion.",
+      "es": {
+        "name": "Iniciador Sistémico de Estrés (Fórmula de Ácido Salicílico)",
+        "category": "Agente de Cebado Fitohormonal",
+        "active_ingredients": [
+          "Ácido Salicílico (50 mg/L activo)"
+        ],
+        "dosage": "0.5 - 1.0 L/ha aplicación foliar",
+        "application_window": "Aplicar 48 horas antes de anomalías de temperatura extrema previstas.",
+        "scientific_rationale": "Induce Proteínas de Choque Térmico (HSPs) y activa la Aclimatación Sistémica Adquirida (SAA), reduciendo el shock fisiológico y el aborto de flores/vainas."
+      }
     },
     {
       "id": "prod_calcium_boron",
       "name": "Foliar Calcium-Boron Membrane Stabilizer",
       "category": "Nutritional Supplement",
-      "active_ingredients": ["Soluble Calcium (CaO 15%)", "Boron (B 1.5%)"],
-      "target_stresses": ["heat", "low_vpd", "waterlogging"],
+      "active_ingredients": [
+        "Soluble Calcium (CaO 15%)",
+        "Boron (B 1.5%)"
+      ],
+      "target_stresses": [
+        "heat",
+        "low_vpd",
+        "waterlogging"
+      ],
       "dosage": "2.0 - 3.0 L/ha foliar application",
       "application_window": "Apply during flowering, fruit set, or post-flooding root recovery.",
-      "scientific_rationale": "Calcium binds to cell wall pectins and cell membranes, preventing membrane leakage during stress, while Boron supports pollen tube elongation during reproductive heat."
+      "scientific_rationale": "Calcium binds to cell wall pectins and cell membranes, preventing membrane leakage during stress, while Boron supports pollen tube elongation during reproductive heat.",
+      "es": {
+        "name": "Estabilizador de Membrana Foliar Calcio-Boro",
+        "category": "Suplemento Nutricional",
+        "active_ingredients": [
+          "Calcio Soluble (CaO 15%)",
+          "Boro (B 1.5%)"
+        ],
+        "dosage": "2.0 - 3.0 L/ha aplicación foliar",
+        "application_window": "Aplicar durante floración, cuajado de frutos, o recuperación radicular post-anegamiento.",
+        "scientific_rationale": "El calcio se une a las pectinas de la pared celular y las membranas celulares, previniendo la pérdida de membrana durante el estrés, mientras el boro favorece la elongación del tubo polínico durante el calor reproductivo."
+      }
     },
     {
       "id": "prod_humic_fulvic",
       "name": "Root Revitalizer Humic & Fulvic Acid Extract",
       "category": "Soil & Root Biostimulant",
-      "active_ingredients": ["Fulvic Acid (20%)", "Humic Acid (50%)"],
-      "target_stresses": ["waterlogging", "drought"],
+      "active_ingredients": [
+        "Fulvic Acid (20%)",
+        "Humic Acid (50%)"
+      ],
+      "target_stresses": [
+        "waterlogging",
+        "drought"
+      ],
       "dosage": "3.0 - 5.0 L/ha fertigation / soil drench",
       "application_window": "Apply post-waterlogging drainage to stimulate adventitious root regrowth and soil microbial activity.",
-      "scientific_rationale": "Chelates trace micronutrients (Fe, Mn, Zn) in hypoxic soil conditions and promotes lateral root development after hypoxia or severe drought."
+      "scientific_rationale": "Chelates trace micronutrients (Fe, Mn, Zn) in hypoxic soil conditions and promotes lateral root development after hypoxia or severe drought.",
+      "es": {
+        "name": "Revitalizador Radicular de Ácidos Húmicos y Fúlvicos",
+        "category": "Bioestimulante de Suelo y Raíz",
+        "active_ingredients": [
+          "Ácido Fúlvico (20%)",
+          "Ácido Húmico (50%)"
+        ],
+        "dosage": "3.0 - 5.0 L/ha fertirriego / riego al suelo",
+        "application_window": "Aplicar después del drenaje post-anegamiento para estimular el rebrote de raíces adventicias y la actividad microbiana del suelo.",
+        "scientific_rationale": "Quela micronutrientes traza (Fe, Mn, Zn) en condiciones de suelo hipóxico y promueve el desarrollo de raíces laterales después de hipoxia o sequía severa."
+      }
     }
   ]
 }

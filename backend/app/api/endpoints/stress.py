@@ -20,6 +20,7 @@ async def analyze_stress_adhoc(
     planting_date: str = Query(..., example="2026-05-10"),
     variety: str = Query(default="Standard Hybrid"),
     maturity_class: str = Query(default="medium"),
+    lang: str = Query(default="en", description="Response language for generated text: 'en' or 'es'"),
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ):
@@ -44,13 +45,16 @@ async def analyze_stress_adhoc(
         recent_weather=combined_weather_series,
         lat=latitude,
         historical_baseline=hist_baseline,
+        variety=variety,
+        lang=lang,
     )
 
     stresses = stress_engine.analyze_abiotic_stresses(
         crop_id=crop_id,
         phenology=phenology,
         forecast_7days=forecast,
-        historical_baseline=hist_baseline
+        historical_baseline=hist_baseline,
+        lang=lang,
     )
 
     # Determine overall stress level
@@ -66,7 +70,7 @@ async def analyze_stress_adhoc(
     else:
         overall_level = "Optimal"
 
-    recommendations = recommendation_engine.generate_recommendations(stresses, crop_id, phenology)
+    recommendations = recommendation_engine.generate_recommendations(stresses, crop_id, phenology, lang=lang)
 
     log_usage_event(db, current_user.id, "stress_analyzed", {"crop_id": crop_id, "overall_stress_level": overall_level})
 
@@ -93,6 +97,7 @@ async def analyze_stress_adhoc(
 @router.get("/analyze/field/{field_id}", response_model=StressAssessmentResponseSchema)
 async def analyze_stress_field(
     field_id: int,
+    lang: str = Query(default="en", description="Response language for generated text: 'en' or 'es'"),
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ):
@@ -112,6 +117,7 @@ async def analyze_stress_field(
         planting_date=field_item.planting_date,
         variety=field_item.variety,
         maturity_class=field_item.maturity_class,
+        lang=lang,
         db=db,
         current_user=current_user,
     )

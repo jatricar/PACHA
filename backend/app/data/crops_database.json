@@ -10,15 +10,44 @@
       "total_gdd": 4200,
       "maturity_varieties": {
         "early": 0.88,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.15
       },
       "stages": [
-        {"name": "Sprouting & Germination", "bbch": "00-09", "gdd_pct": 0.10, "heat_threshold": 38.0, "vpd_max_threshold": 2.2},
-        {"name": "Tillering & Early Growth", "bbch": "10-29", "gdd_pct": 0.30, "heat_threshold": 37.0, "vpd_max_threshold": 2.0},
-        {"name": "Grand Growth (Stalk Elongation)", "bbch": "30-49", "gdd_pct": 0.75, "heat_threshold": 36.0, "vpd_max_threshold": 2.0},
-        {"name": "Ripening & Sucrose Accumulation", "bbch": "80-89", "gdd_pct": 1.00, "heat_threshold": 35.0, "vpd_max_threshold": 2.4}
-      ]
+        {
+          "name": "Sprouting & Germination",
+          "bbch": "00-09",
+          "gdd_pct": 0.1,
+          "heat_threshold": 38.0,
+          "vpd_max_threshold": 2.2,
+          "name_es": "Brotación y Germinación"
+        },
+        {
+          "name": "Tillering & Early Growth",
+          "bbch": "10-29",
+          "gdd_pct": 0.3,
+          "heat_threshold": 37.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Macollaje y Crecimiento Inicial"
+        },
+        {
+          "name": "Grand Growth (Stalk Elongation)",
+          "bbch": "30-49",
+          "gdd_pct": 0.75,
+          "heat_threshold": 36.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Gran Crecimiento (Elongación del Tallo)"
+        },
+        {
+          "name": "Ripening & Sucrose Accumulation",
+          "bbch": "80-89",
+          "gdd_pct": 1.0,
+          "heat_threshold": 35.0,
+          "vpd_max_threshold": 2.4,
+          "name_es": "Maduración y Acumulación de Sacarosa"
+        }
+      ],
+      "name_es": "Caña de Azúcar"
     },
     "maize": {
       "name": "Maize (Corn)",
@@ -30,16 +59,52 @@
       "total_gdd": 1550,
       "maturity_varieties": {
         "early": 0.85,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.15
       },
       "stages": [
-        {"name": "Emergence (VE-V2)", "bbch": "00-12", "gdd_pct": 0.10, "heat_threshold": 35.0, "vpd_max_threshold": 2.0},
-        {"name": "Vegetative Growth (V3-V18)", "bbch": "13-39", "gdd_pct": 0.45, "heat_threshold": 35.0, "vpd_max_threshold": 2.2},
-        {"name": "Tasseling & Silking (VT-R1)", "bbch": "51-65", "gdd_pct": 0.60, "heat_threshold": 33.0, "vpd_max_threshold": 1.8},
-        {"name": "Grain Filling & Milk/Dough (R2-R5)", "bbch": "71-85", "gdd_pct": 0.88, "heat_threshold": 34.0, "vpd_max_threshold": 2.0},
-        {"name": "Physiological Maturity (R6)", "bbch": "89-99", "gdd_pct": 1.00, "heat_threshold": 36.0, "vpd_max_threshold": 2.5}
-      ]
+        {
+          "name": "Emergence (VE-V2)",
+          "bbch": "00-12",
+          "gdd_pct": 0.1,
+          "heat_threshold": 35.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Emergencia (VE-V2)"
+        },
+        {
+          "name": "Vegetative Growth (V3-V18)",
+          "bbch": "13-39",
+          "gdd_pct": 0.45,
+          "heat_threshold": 35.0,
+          "vpd_max_threshold": 2.2,
+          "name_es": "Crecimiento Vegetativo (V3-V18)"
+        },
+        {
+          "name": "Tasseling & Silking (VT-R1)",
+          "bbch": "51-65",
+          "gdd_pct": 0.6,
+          "heat_threshold": 33.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Panojamiento y Floración Femenina (VT-R1)"
+        },
+        {
+          "name": "Grain Filling & Milk/Dough (R2-R5)",
+          "bbch": "71-85",
+          "gdd_pct": 0.88,
+          "heat_threshold": 34.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Llenado de Grano, Lechoso/Pastoso (R2-R5)"
+        },
+        {
+          "name": "Physiological Maturity (R6)",
+          "bbch": "89-99",
+          "gdd_pct": 1.0,
+          "heat_threshold": 36.0,
+          "vpd_max_threshold": 2.5,
+          "name_es": "Madurez Fisiológica (R6)"
+        }
+      ],
+      "name_es": "Maíz"
     },
     "wheat": {
       "name": "Wheat",
@@ -51,16 +116,52 @@
       "total_gdd": 1900,
       "maturity_varieties": {
         "early": 0.88,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.12
       },
       "stages": [
-        {"name": "Germination & Emergence", "bbch": "00-09", "gdd_pct": 0.08, "heat_threshold": 28.0, "vpd_max_threshold": 1.8},
-        {"name": "Tillering & Stem Elongation", "bbch": "10-39", "gdd_pct": 0.45, "heat_threshold": 26.0, "vpd_max_threshold": 1.8},
-        {"name": "Heading & Anthesis (Flowering)", "bbch": "51-69", "gdd_pct": 0.62, "heat_threshold": 28.0, "vpd_max_threshold": 1.6},
-        {"name": "Milk & Dough Grain Fill", "bbch": "71-85", "gdd_pct": 0.88, "heat_threshold": 30.0, "vpd_max_threshold": 2.0},
-        {"name": "Ripening", "bbch": "89-99", "gdd_pct": 1.00, "heat_threshold": 32.0, "vpd_max_threshold": 2.5}
-      ]
+        {
+          "name": "Germination & Emergence",
+          "bbch": "00-09",
+          "gdd_pct": 0.08,
+          "heat_threshold": 28.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Germinación y Emergencia"
+        },
+        {
+          "name": "Tillering & Stem Elongation",
+          "bbch": "10-39",
+          "gdd_pct": 0.45,
+          "heat_threshold": 26.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Macollaje y Encañazón"
+        },
+        {
+          "name": "Heading & Anthesis (Flowering)",
+          "bbch": "51-69",
+          "gdd_pct": 0.62,
+          "heat_threshold": 28.0,
+          "vpd_max_threshold": 1.6,
+          "name_es": "Espigazón y Antesis (Floración)"
+        },
+        {
+          "name": "Milk & Dough Grain Fill",
+          "bbch": "71-85",
+          "gdd_pct": 0.88,
+          "heat_threshold": 30.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Llenado de Grano Lechoso y Pastoso"
+        },
+        {
+          "name": "Ripening",
+          "bbch": "89-99",
+          "gdd_pct": 1.0,
+          "heat_threshold": 32.0,
+          "vpd_max_threshold": 2.5,
+          "name_es": "Maduración"
+        }
+      ],
+      "name_es": "Trigo"
     },
     "rice": {
       "name": "Rice",
@@ -72,16 +173,52 @@
       "total_gdd": 1800,
       "maturity_varieties": {
         "early": 0.85,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.15
       },
       "stages": [
-        {"name": "Seedling & Establishment", "bbch": "00-13", "gdd_pct": 0.12, "heat_threshold": 35.0, "vpd_max_threshold": 2.0},
-        {"name": "Tillering & Panicle Initiation", "bbch": "14-39", "gdd_pct": 0.50, "heat_threshold": 35.0, "vpd_max_threshold": 2.0},
-        {"name": "Flowering & Anthesis", "bbch": "61-69", "gdd_pct": 0.68, "heat_threshold": 33.0, "vpd_max_threshold": 1.6},
-        {"name": "Grain Filling (Milk/Dough)", "bbch": "71-85", "gdd_pct": 0.90, "heat_threshold": 34.0, "vpd_max_threshold": 1.8},
-        {"name": "Maturity & Harvest", "bbch": "89-99", "gdd_pct": 1.00, "heat_threshold": 36.0, "vpd_max_threshold": 2.2}
-      ]
+        {
+          "name": "Seedling & Establishment",
+          "bbch": "00-13",
+          "gdd_pct": 0.12,
+          "heat_threshold": 35.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Plántula y Establecimiento"
+        },
+        {
+          "name": "Tillering & Panicle Initiation",
+          "bbch": "14-39",
+          "gdd_pct": 0.5,
+          "heat_threshold": 35.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Macollaje e Iniciación de Panícula"
+        },
+        {
+          "name": "Flowering & Anthesis",
+          "bbch": "61-69",
+          "gdd_pct": 0.68,
+          "heat_threshold": 33.0,
+          "vpd_max_threshold": 1.6,
+          "name_es": "Floración y Antesis"
+        },
+        {
+          "name": "Grain Filling (Milk/Dough)",
+          "bbch": "71-85",
+          "gdd_pct": 0.9,
+          "heat_threshold": 34.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Llenado de Grano (Lechoso/Pastoso)"
+        },
+        {
+          "name": "Maturity & Harvest",
+          "bbch": "89-99",
+          "gdd_pct": 1.0,
+          "heat_threshold": 36.0,
+          "vpd_max_threshold": 2.2,
+          "name_es": "Madurez y Cosecha"
+        }
+      ],
+      "name_es": "Arroz"
     },
     "potato": {
       "name": "Potato",
@@ -93,16 +230,52 @@
       "total_gdd": 1350,
       "maturity_varieties": {
         "early": 0.82,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.18
       },
       "stages": [
-        {"name": "Sprouting & Emergence", "bbch": "00-09", "gdd_pct": 0.12, "heat_threshold": 26.0, "vpd_max_threshold": 1.6},
-        {"name": "Vegetative & Vine Growth", "bbch": "10-39", "gdd_pct": 0.35, "heat_threshold": 25.0, "vpd_max_threshold": 1.6},
-        {"name": "Tuber Initiation", "bbch": "40-49", "gdd_pct": 0.50, "heat_threshold": 23.0, "vpd_max_threshold": 1.5},
-        {"name": "Tuber Bulking", "bbch": "70-79", "gdd_pct": 0.85, "heat_threshold": 25.0, "vpd_max_threshold": 1.7},
-        {"name": "Maturation & Skin Set", "bbch": "89-99", "gdd_pct": 1.00, "heat_threshold": 28.0, "vpd_max_threshold": 2.0}
-      ]
+        {
+          "name": "Sprouting & Emergence",
+          "bbch": "00-09",
+          "gdd_pct": 0.12,
+          "heat_threshold": 26.0,
+          "vpd_max_threshold": 1.6,
+          "name_es": "Brotación y Emergencia"
+        },
+        {
+          "name": "Vegetative & Vine Growth",
+          "bbch": "10-39",
+          "gdd_pct": 0.35,
+          "heat_threshold": 25.0,
+          "vpd_max_threshold": 1.6,
+          "name_es": "Crecimiento Vegetativo y de Guía"
+        },
+        {
+          "name": "Tuber Initiation",
+          "bbch": "40-49",
+          "gdd_pct": 0.5,
+          "heat_threshold": 23.0,
+          "vpd_max_threshold": 1.5,
+          "name_es": "Iniciación de Tubérculos"
+        },
+        {
+          "name": "Tuber Bulking",
+          "bbch": "70-79",
+          "gdd_pct": 0.85,
+          "heat_threshold": 25.0,
+          "vpd_max_threshold": 1.7,
+          "name_es": "Engrosamiento de Tubérculos"
+        },
+        {
+          "name": "Maturation & Skin Set",
+          "bbch": "89-99",
+          "gdd_pct": 1.0,
+          "heat_threshold": 28.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Maduración y Endurecimiento de Piel"
+        }
+      ],
+      "name_es": "Papa"
     },
     "sugar_beet": {
       "name": "Sugar Beet",
@@ -114,15 +287,44 @@
       "total_gdd": 2100,
       "maturity_varieties": {
         "early": 0.88,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.12
       },
       "stages": [
-        {"name": "Germination & Cotyledon", "bbch": "00-09", "gdd_pct": 0.08, "heat_threshold": 28.0, "vpd_max_threshold": 1.8},
-        {"name": "Rosette & Canopy Development", "bbch": "10-39", "gdd_pct": 0.40, "heat_threshold": 30.0, "vpd_max_threshold": 2.0},
-        {"name": "Root Storage Development", "bbch": "40-49", "gdd_pct": 0.80, "heat_threshold": 28.0, "vpd_max_threshold": 1.9},
-        {"name": "Sugar Accumulation & Harvest", "bbch": "89-99", "gdd_pct": 1.00, "heat_threshold": 30.0, "vpd_max_threshold": 2.2}
-      ]
+        {
+          "name": "Germination & Cotyledon",
+          "bbch": "00-09",
+          "gdd_pct": 0.08,
+          "heat_threshold": 28.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Germinación y Cotiledón"
+        },
+        {
+          "name": "Rosette & Canopy Development",
+          "bbch": "10-39",
+          "gdd_pct": 0.4,
+          "heat_threshold": 30.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Roseta y Desarrollo del Follaje"
+        },
+        {
+          "name": "Root Storage Development",
+          "bbch": "40-49",
+          "gdd_pct": 0.8,
+          "heat_threshold": 28.0,
+          "vpd_max_threshold": 1.9,
+          "name_es": "Desarrollo de la Raíz de Reserva"
+        },
+        {
+          "name": "Sugar Accumulation & Harvest",
+          "bbch": "89-99",
+          "gdd_pct": 1.0,
+          "heat_threshold": 30.0,
+          "vpd_max_threshold": 2.2,
+          "name_es": "Acumulación de Azúcar y Cosecha"
+        }
+      ],
+      "name_es": "Remolacha Azucarera"
     },
     "soybean": {
       "name": "Soybean",
@@ -134,16 +336,52 @@
       "total_gdd": 1450,
       "maturity_varieties": {
         "early": 0.85,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.15
       },
       "stages": [
-        {"name": "Emergence & Cotyledon (VE-VC)", "bbch": "00-09", "gdd_pct": 0.10, "heat_threshold": 35.0, "vpd_max_threshold": 2.0},
-        {"name": "Vegetative Growth (V1-Vn)", "bbch": "10-39", "gdd_pct": 0.40, "heat_threshold": 34.0, "vpd_max_threshold": 2.0},
-        {"name": "Flowering (R1-R2)", "bbch": "60-69", "gdd_pct": 0.58, "heat_threshold": 32.0, "vpd_max_threshold": 1.7},
-        {"name": "Pod Development & Seed Fill (R3-R6)", "bbch": "70-85", "gdd_pct": 0.88, "heat_threshold": 33.0, "vpd_max_threshold": 1.8},
-        {"name": "Maturation (R7-R8)", "bbch": "89-99", "gdd_pct": 1.00, "heat_threshold": 36.0, "vpd_max_threshold": 2.4}
-      ]
+        {
+          "name": "Emergence & Cotyledon (VE-VC)",
+          "bbch": "00-09",
+          "gdd_pct": 0.1,
+          "heat_threshold": 35.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Emergencia y Cotiledón (VE-VC)"
+        },
+        {
+          "name": "Vegetative Growth (V1-Vn)",
+          "bbch": "10-39",
+          "gdd_pct": 0.4,
+          "heat_threshold": 34.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Crecimiento Vegetativo (V1-Vn)"
+        },
+        {
+          "name": "Flowering (R1-R2)",
+          "bbch": "60-69",
+          "gdd_pct": 0.58,
+          "heat_threshold": 32.0,
+          "vpd_max_threshold": 1.7,
+          "name_es": "Floración (R1-R2)"
+        },
+        {
+          "name": "Pod Development & Seed Fill (R3-R6)",
+          "bbch": "70-85",
+          "gdd_pct": 0.88,
+          "heat_threshold": 33.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Desarrollo de Vainas y Llenado de Semilla (R3-R6)"
+        },
+        {
+          "name": "Maturation (R7-R8)",
+          "bbch": "89-99",
+          "gdd_pct": 1.0,
+          "heat_threshold": 36.0,
+          "vpd_max_threshold": 2.4,
+          "name_es": "Maduración (R7-R8)"
+        }
+      ],
+      "name_es": "Soja"
     },
     "cassava": {
       "name": "Cassava",
@@ -155,15 +393,44 @@
       "total_gdd": 3200,
       "maturity_varieties": {
         "early": 0.88,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.15
       },
       "stages": [
-        {"name": "Sprouting & Rooting", "bbch": "00-09", "gdd_pct": 0.10, "heat_threshold": 38.0, "vpd_max_threshold": 2.2},
-        {"name": "Canopy & Stem Formation", "bbch": "10-39", "gdd_pct": 0.35, "heat_threshold": 36.0, "vpd_max_threshold": 2.2},
-        {"name": "Tuberous Root Bulking", "bbch": "40-49", "gdd_pct": 0.85, "heat_threshold": 35.0, "vpd_max_threshold": 2.0},
-        {"name": "Dormancy & Harvesting", "bbch": "89-99", "gdd_pct": 1.00, "heat_threshold": 38.0, "vpd_max_threshold": 2.5}
-      ]
+        {
+          "name": "Sprouting & Rooting",
+          "bbch": "00-09",
+          "gdd_pct": 0.1,
+          "heat_threshold": 38.0,
+          "vpd_max_threshold": 2.2,
+          "name_es": "Brotación y Enraizamiento"
+        },
+        {
+          "name": "Canopy & Stem Formation",
+          "bbch": "10-39",
+          "gdd_pct": 0.35,
+          "heat_threshold": 36.0,
+          "vpd_max_threshold": 2.2,
+          "name_es": "Formación de Follaje y Tallo"
+        },
+        {
+          "name": "Tuberous Root Bulking",
+          "bbch": "40-49",
+          "gdd_pct": 0.85,
+          "heat_threshold": 35.0,
+          "vpd_max_threshold": 2.0,
+          "name_es": "Engrosamiento de Raíces Tuberosas"
+        },
+        {
+          "name": "Dormancy & Harvesting",
+          "bbch": "89-99",
+          "gdd_pct": 1.0,
+          "heat_threshold": 38.0,
+          "vpd_max_threshold": 2.5,
+          "name_es": "Dormancia y Cosecha"
+        }
+      ],
+      "name_es": "Mandioca"
     },
     "oil_palm": {
       "name": "Oil Palm",
@@ -174,15 +441,37 @@
       "t_frost_crit": 10.0,
       "total_gdd": 3600,
       "maturity_varieties": {
-        "early": 1.00,
-        "medium": 1.00,
-        "late": 1.00
+        "early": 1.0,
+        "medium": 1.0,
+        "late": 1.0
       },
       "stages": [
-        {"name": "Spear Leaf & Vegetative Development", "bbch": "10-39", "gdd_pct": 0.30, "heat_threshold": 35.0, "vpd_max_threshold": 1.8},
-        {"name": "Inflorescence & Sex Determination", "bbch": "50-69", "gdd_pct": 0.65, "heat_threshold": 33.0, "vpd_max_threshold": 1.8},
-        {"name": "Bunch Development & Fruit Ripening", "bbch": "70-89", "gdd_pct": 1.00, "heat_threshold": 34.0, "vpd_max_threshold": 1.9}
-      ]
+        {
+          "name": "Spear Leaf & Vegetative Development",
+          "bbch": "10-39",
+          "gdd_pct": 0.3,
+          "heat_threshold": 35.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Hoja Lanza y Desarrollo Vegetativo"
+        },
+        {
+          "name": "Inflorescence & Sex Determination",
+          "bbch": "50-69",
+          "gdd_pct": 0.65,
+          "heat_threshold": 33.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Inflorescencia y Determinación Sexual"
+        },
+        {
+          "name": "Bunch Development & Fruit Ripening",
+          "bbch": "70-89",
+          "gdd_pct": 1.0,
+          "heat_threshold": 34.0,
+          "vpd_max_threshold": 1.9,
+          "name_es": "Desarrollo de Racimos y Maduración del Fruto"
+        }
+      ],
+      "name_es": "Palma Aceitera"
     },
     "barley": {
       "name": "Barley",
@@ -194,16 +483,52 @@
       "total_gdd": 1700,
       "maturity_varieties": {
         "early": 0.86,
-        "medium": 1.00,
+        "medium": 1.0,
         "late": 1.14
       },
       "stages": [
-        {"name": "Germination & Emergence", "bbch": "00-09", "gdd_pct": 0.08, "heat_threshold": 26.0, "vpd_max_threshold": 1.8},
-        {"name": "Tillering & Stem Elongation", "bbch": "10-39", "gdd_pct": 0.45, "heat_threshold": 25.0, "vpd_max_threshold": 1.8},
-        {"name": "Heading & Flowering", "bbch": "51-69", "gdd_pct": 0.62, "heat_threshold": 26.0, "vpd_max_threshold": 1.6},
-        {"name": "Grain Filling", "bbch": "71-85", "gdd_pct": 0.88, "heat_threshold": 28.0, "vpd_max_threshold": 1.9},
-        {"name": "Ripening", "bbch": "89-99", "gdd_pct": 1.00, "heat_threshold": 30.0, "vpd_max_threshold": 2.2}
-      ]
+        {
+          "name": "Germination & Emergence",
+          "bbch": "00-09",
+          "gdd_pct": 0.08,
+          "heat_threshold": 26.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Germinación y Emergencia"
+        },
+        {
+          "name": "Tillering & Stem Elongation",
+          "bbch": "10-39",
+          "gdd_pct": 0.45,
+          "heat_threshold": 25.0,
+          "vpd_max_threshold": 1.8,
+          "name_es": "Macollaje y Encañazón"
+        },
+        {
+          "name": "Heading & Flowering",
+          "bbch": "51-69",
+          "gdd_pct": 0.62,
+          "heat_threshold": 26.0,
+          "vpd_max_threshold": 1.6,
+          "name_es": "Espigazón y Floración"
+        },
+        {
+          "name": "Grain Filling",
+          "bbch": "71-85",
+          "gdd_pct": 0.88,
+          "heat_threshold": 28.0,
+          "vpd_max_threshold": 1.9,
+          "name_es": "Llenado de Grano"
+        },
+        {
+          "name": "Ripening",
+          "bbch": "89-99",
+          "gdd_pct": 1.0,
+          "heat_threshold": 30.0,
+          "vpd_max_threshold": 2.2,
+          "name_es": "Maduración"
+        }
+      ],
+      "name_es": "Cebada"
     }
   }
 }

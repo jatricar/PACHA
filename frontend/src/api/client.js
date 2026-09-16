@@ -69,14 +69,15 @@ export async function deleteField(fieldId) {
   return res.json();
 }
 
-export async function analyzeAdhocStress({ latitude, longitude, crop_id, planting_date, variety, maturity_class }) {
+export async function analyzeAdhocStress({ latitude, longitude, crop_id, planting_date, variety, maturity_class, lang }) {
   const params = new URLSearchParams({
     latitude,
     longitude,
     crop_id,
     planting_date,
     variety: variety || "Standard Hybrid",
-    maturity_class: maturity_class || "medium"
+    maturity_class: maturity_class || "medium",
+    lang: lang || "en"
   });
   const res = await fetch(`${API_BASE}/stress/analyze?${params.toString()}`, { headers: await authHeaders() });
   if (!res.ok) throw new Error(await parseErrorDetail(res));

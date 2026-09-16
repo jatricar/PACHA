@@ -7,9 +7,11 @@ class StressAnalyzerEngine:
         crop_id: str,
         phenology: Dict[str, Any],
         forecast_7days: List[Dict[str, Any]],
-        historical_baseline: Dict[str, Any]
+        historical_baseline: Dict[str, Any],
+        lang: str = "en",
     ) -> List[Dict[str, Any]]:
         """Evaluate 6 abiotic stress categories using weather forecasts and phenology stage sensitivity."""
+        es = lang == "es"
         current_stage = phenology.get("current_stage", {})
         heat_thresh = current_stage.get("heat_threshold", 32.0)
         vpd_thresh = current_stage.get("vpd_max_threshold", 2.0)
@@ -46,12 +48,16 @@ class StressAnalyzerEngine:
 
         stresses.append({
             "stress_type": "heat",
-            "title": "Extreme Temperature (Heat)",
+            "title": "Temperatura Extrema (Calor)" if es else "Extreme Temperature (Heat)",
             "severity": h_sev,
             "score": h_score,
-            "trigger_reason": f"{h_days_above} days forecast exceeding stage heat sensitivity threshold ({heat_thresh}°C). Max forecast: {max_t}°C.",
-            "observed_metric": f"Max Temp: {max_t}°C",
-            "critical_threshold": f"Threshold: {heat_thresh}°C"
+            "trigger_reason": (
+                f"{h_days_above} días del pronóstico superan el umbral de sensibilidad al calor de la etapa ({heat_thresh}°C). Máxima pronosticada: {max_t}°C."
+                if es else
+                f"{h_days_above} days forecast exceeding stage heat sensitivity threshold ({heat_thresh}°C). Max forecast: {max_t}°C."
+            ),
+            "observed_metric": f"Temp. Máx: {max_t}°C" if es else f"Max Temp: {max_t}°C",
+            "critical_threshold": f"Umbral: {heat_thresh}°C" if es else f"Threshold: {heat_thresh}°C"
         })
 
         # 2. FROST / COLD STRESS EVALUATION
@@ -80,12 +86,16 @@ class StressAnalyzerEngine:
 
         stresses.append({
             "stress_type": "frost",
-            "title": "Extreme Temperature (Frost / Cold)",
+            "title": "Temperatura Extrema (Helada / Frío)" if es else "Extreme Temperature (Frost / Cold)",
             "severity": f_sev,
             "score": f_score,
-            "trigger_reason": f"Minimum forecast temperature ({min_t}°C) reaching or dropping below frost tolerance limit.",
-            "observed_metric": f"Min Temp: {min_t}°C",
-            "critical_threshold": f"Threshold: {frost_thresh}°C"
+            "trigger_reason": (
+                f"La temperatura mínima pronosticada ({min_t}°C) alcanza o cae por debajo del límite de tolerancia a heladas."
+                if es else
+                f"Minimum forecast temperature ({min_t}°C) reaching or dropping below frost tolerance limit."
+            ),
+            "observed_metric": f"Temp. Mín: {min_t}°C" if es else f"Min Temp: {min_t}°C",
+            "critical_threshold": f"Umbral: {frost_thresh}°C" if es else f"Threshold: {frost_thresh}°C"
         })
 
         # 3. HIGH VPD STRESS EVALUATION
@@ -108,12 +118,16 @@ class StressAnalyzerEngine:
 
         stresses.append({
             "stress_type": "high_vpd",
-            "title": "Vapor Pressure Deficit (High VPD)",
+            "title": "Déficit de Presión de Vapor (VPD Alto)" if es else "Vapor Pressure Deficit (High VPD)",
             "severity": v_sev,
             "score": v_score,
-            "trigger_reason": f"High atmospheric evaporative demand (VPD max {max_v} kPa) inducing stomatal closure and transpiration stress.",
-            "observed_metric": f"Max VPD: {max_v} kPa",
-            "critical_threshold": f"Stage Threshold: {vpd_thresh} kPa"
+            "trigger_reason": (
+                f"Alta demanda evaporativa atmosférica (VPD máx {max_v} kPa) que induce cierre estomático y estrés de transpiración."
+                if es else
+                f"High atmospheric evaporative demand (VPD max {max_v} kPa) inducing stomatal closure and transpiration stress."
+            ),
+            "observed_metric": f"VPD Máx: {max_v} kPa" if es else f"Max VPD: {max_v} kPa",
+            "critical_threshold": f"Umbral de Etapa: {vpd_thresh} kPa" if es else f"Stage Threshold: {vpd_thresh} kPa"
         })
 
         # 4. LOW VPD STRESS EVALUATION
@@ -133,12 +147,16 @@ class StressAnalyzerEngine:
 
         stresses.append({
             "stress_type": "low_vpd",
-            "title": "Vapor Pressure Deficit (Low VPD)",
+            "title": "Déficit de Presión de Vapor (VPD Bajo)" if es else "Vapor Pressure Deficit (Low VPD)",
             "severity": lv_sev,
             "score": lv_score,
-            "trigger_reason": f"Sustained high humidity / low VPD ({min_avg_v} kPa) suppressing nutrient transpiration flow and elevating pathogen risk.",
-            "observed_metric": f"Min Avg VPD: {min_avg_v} kPa",
-            "critical_threshold": "Optimal Range: 0.5 - 1.5 kPa"
+            "trigger_reason": (
+                f"Humedad alta sostenida / VPD bajo ({min_avg_v} kPa) que reduce el flujo de transpiración de nutrientes y eleva el riesgo de patógenos."
+                if es else
+                f"Sustained high humidity / low VPD ({min_avg_v} kPa) suppressing nutrient transpiration flow and elevating pathogen risk."
+            ),
+            "observed_metric": f"VPD Prom. Mín: {min_avg_v} kPa" if es else f"Min Avg VPD: {min_avg_v} kPa",
+            "critical_threshold": "Rango Óptimo: 0.5 - 1.5 kPa" if es else "Optimal Range: 0.5 - 1.5 kPa"
         })
 
         # 5. DROUGHT STRESS EVALUATION
@@ -161,12 +179,16 @@ class StressAnalyzerEngine:
 
         stresses.append({
             "stress_type": "drought",
-            "title": "Drought / Soil Moisture Deficit",
+            "title": "Sequía / Déficit de Humedad del Suelo" if es else "Drought / Soil Moisture Deficit",
             "severity": d_sev,
             "score": d_score,
-            "trigger_reason": f"7-day rainfall ({precip_total:.1f} mm) covers only {water_ratio*100:.0f}% of crop evapotranspiration demand (PET: {pet_total:.1f} mm).",
+            "trigger_reason": (
+                f"La lluvia a 7 días ({precip_total:.1f} mm) cubre solo el {water_ratio*100:.0f}% de la demanda evapotranspirativa del cultivo (PET: {pet_total:.1f} mm)."
+                if es else
+                f"7-day rainfall ({precip_total:.1f} mm) covers only {water_ratio*100:.0f}% of crop evapotranspiration demand (PET: {pet_total:.1f} mm)."
+            ),
             "observed_metric": f"Precip/PET: {water_ratio*100:.0f}%",
-            "critical_threshold": "Threshold: 65% PET coverage"
+            "critical_threshold": "Umbral: 65% de cobertura PET" if es else "Threshold: 65% PET coverage"
         })
 
         # 6. WATERLOGGING STRESS EVALUATION
@@ -188,12 +210,16 @@ class StressAnalyzerEngine:
 
         stresses.append({
             "stress_type": "waterlogging",
-            "title": "Waterlogging / Root Anoxia",
+            "title": "Anegamiento / Anoxia Radicular" if es else "Waterlogging / Root Anoxia",
             "severity": wl_sev,
             "score": wl_score,
-            "trigger_reason": f"Excessive rainfall forecast (Peak 24h: {max_single_day_precip:.1f} mm, Total: {precip_total:.1f} mm) threatening root oxygen deprivation.",
-            "observed_metric": f"Max Rain: {max_single_day_precip:.1f} mm/day",
-            "critical_threshold": "Infiltration Capacity: 30 mm/day"
+            "trigger_reason": (
+                f"Pronóstico de lluvia excesiva (Pico 24h: {max_single_day_precip:.1f} mm, Total: {precip_total:.1f} mm) que amenaza con privar de oxígeno a las raíces."
+                if es else
+                f"Excessive rainfall forecast (Peak 24h: {max_single_day_precip:.1f} mm, Total: {precip_total:.1f} mm) threatening root oxygen deprivation."
+            ),
+            "observed_metric": f"Lluvia Máx: {max_single_day_precip:.1f} mm/día" if es else f"Max Rain: {max_single_day_precip:.1f} mm/day",
+            "critical_threshold": "Capacidad de Infiltración: 30 mm/día" if es else "Infiltration Capacity: 30 mm/day"
         })
 
         return stresses

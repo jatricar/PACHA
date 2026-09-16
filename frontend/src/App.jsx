@@ -14,7 +14,7 @@ import { useLanguage } from "./i18n/LanguageContext";
 import { useAuth } from "./auth/AuthContext";
 
 export default function App() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { user, loading: authLoading } = useAuth();
 
   const [savedFields, setSavedFields] = useState([]);
@@ -45,12 +45,15 @@ export default function App() {
     }
   }, [user]);
 
-  // Run stress analysis whenever activeField changes
+  // Run stress analysis whenever activeField changes - and re-run it when
+  // the UI language changes too, since stage names, stress alerts and
+  // recommendation text all come from the backend already translated for
+  // the requested language, not translated client-side like static labels.
   useEffect(() => {
     if (activeField) {
       runAnalysis(activeField);
     }
-  }, [activeField]);
+  }, [activeField, lang]);
 
   const loadSavedFields = async () => {
     try {
@@ -104,7 +107,8 @@ export default function App() {
         crop_id: fieldParams.crop_id,
         planting_date: fieldParams.planting_date,
         variety: fieldParams.variety,
-        maturity_class: fieldParams.maturity_class
+        maturity_class: fieldParams.maturity_class,
+        lang
       });
       setStressData(data);
     } catch (err) {

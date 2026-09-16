@@ -60,6 +60,8 @@ class PhenologyGDDEngine:
         recent_weather: Any = None,
         lat: Optional[float] = None,
         historical_baseline: Optional[Dict[str, Any]] = None,
+        variety: Optional[str] = None,
+        lang: str = "en",
     ) -> Dict[str, Any]:
         """Evaluate field phenological progress, BBCH stage, and GDD accumulation.
 
@@ -136,7 +138,7 @@ class PhenologyGDDEngine:
             is_current = (progress_pct >= prev_gdd_pct) and (progress_pct < stg_gdd_pct or stg == stages_data[-1])
 
             stage_obj = {
-                "name": stg["name"],
+                "name": stg["name_es"] if lang == "es" and stg.get("name_es") else stg["name"],
                 "bbch": stg["bbch"],
                 "gdd_pct": stg_gdd_pct,
                 "heat_threshold": stg["heat_threshold"],
@@ -191,10 +193,17 @@ class PhenologyGDDEngine:
                 # rather than silently showing a misleadingly precise date.
                 maturity_uncertain = True
 
+        crop_display_name = crop_info["name_es"] if lang == "es" and crop_info.get("name_es") else crop_info["name"]
+
         return {
-            "crop_name": crop_info["name"],
+            "crop_name": crop_display_name,
             "scientific_name": crop_info["scientific_name"],
-            "variety": crop_info.get("name", crop_id),
+            # The actual seed variety/hybrid the user entered (e.g. "Pioneer
+            # 1197") - previously this always silently fell back to the
+            # crop's own common name instead, so the dashboard showed
+            # "Variety: Maize (Corn)" for every single field regardless of
+            # what was actually planted.
+            "variety": variety if variety else crop_display_name,
             "planting_date": planting_date_str,
             "current_date": c_date.strftime("%Y-%m-%d"),
             "days_after_planting": days_after_planting,

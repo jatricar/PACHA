@@ -1,9 +1,12 @@
 import React from "react";
 import { ThermometerSun, Snowflake, Wind, CloudRain, Droplets, ShieldAlert } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
+import { useCollapsible } from "../hooks/useCollapsible";
+import { CollapseToggleButton, CollapsibleBody, CollapsibleHeader } from "./CollapsibleSection";
 
 export function StressRiskRadar({ stresses }) {
   const { t } = useLanguage();
+  const [expanded, setExpanded] = useCollapsible("stress", true);
   if (!stresses || stresses.length === 0) return null;
 
   const getIcon = (type) => {
@@ -38,10 +41,23 @@ export function StressRiskRadar({ stresses }) {
     }
   };
 
+  // Severity counts stay visible next to the title even when the section is
+  // collapsed - a plain title alone would give no clue whether closing this
+  // card is hiding something urgent.
+  const severityCounts = stresses.reduce((acc, s) => {
+    acc[s.severity] = (acc[s.severity] || 0) + 1;
+    return acc;
+  }, {});
+  const severityOrder = ["Severe", "High", "Moderate", "Low"];
+
   return (
     <div className="glass-card" style={{ padding: "1.25rem" }}>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+      <CollapsibleHeader
+        expanded={expanded}
+        onToggle={() => setExpanded(x => !x)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}
+      >
         <div>
           <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "#f43f5e", fontWeight: "700" }}>
             {t("stress.sectionTitle")}
@@ -49,9 +65,16 @@ export function StressRiskRadar({ stresses }) {
           <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#ffffff", margin: "0.15rem 0" }}>
             {t("stress.matrixTitle")}
           </h2>
+          <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+            {severityOrder.filter(sev => severityCounts[sev]).map(sev => (
+              <span key={sev} className={getBadgeClass(sev)}>{severityCounts[sev]} {sev}</span>
+            ))}
+          </div>
         </div>
-      </div>
+        <CollapseToggleButton expanded={expanded} onToggle={() => setExpanded(x => !x)} />
+      </CollapsibleHeader>
 
+      <CollapsibleBody expanded={expanded}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
         {stresses.map((item, idx) => {
           const badgeCls = getBadgeClass(item.severity);
@@ -109,6 +132,7 @@ export function StressRiskRadar({ stresses }) {
           );
         })}
       </div>
+      </CollapsibleBody>
 
     </div>
   );

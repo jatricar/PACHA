@@ -2,9 +2,12 @@ import React from "react";
 import { Calendar, Flame, Target, Award, DatabaseZap } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { PhenologyTimeline } from "./PhenologyTimeline";
+import { useCollapsible } from "../hooks/useCollapsible";
+import { CollapseToggleButton, CollapsibleBody, CollapsibleHeader } from "./CollapsibleSection";
 
 export function PhenologyGauge({ phenology }) {
   const { t } = useLanguage();
+  const [expanded, setExpanded] = useCollapsible("phenology", true);
   if (!phenology) return null;
 
   const {
@@ -26,8 +29,14 @@ export function PhenologyGauge({ phenology }) {
   return (
     <div className="glass-card" style={{ padding: "1.25rem" }}>
 
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+      {/* Header - the whole row toggles the section; header content (crop,
+          variety, harvest date) stays visible when collapsed as the card's
+          compact summary. */}
+      <CollapsibleHeader
+        expanded={expanded}
+        onToggle={() => setExpanded(x => !x)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}
+      >
         <div>
           <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "#10b981", fontWeight: "700" }}>
             {t("phenology.sectionTitle")}
@@ -40,15 +49,19 @@ export function PhenologyGauge({ phenology }) {
           </p>
         </div>
 
-        <div className="glass-panel" style={{ padding: "0.5rem 1rem", textAlign: "right" }}>
-          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>{t("phenology.harvestDate")}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#06b6d4", fontWeight: "700", fontSize: "0.95rem" }}>
-            <Calendar size={16} />
-            <span>{maturity_uncertain || !projected_maturity_date ? t("phenology.harvestUncertain") : projected_maturity_date}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <div className="glass-panel" style={{ padding: "0.5rem 1rem", textAlign: "right" }}>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>{t("phenology.harvestDate")}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#06b6d4", fontWeight: "700", fontSize: "0.95rem" }}>
+              <Calendar size={16} />
+              <span>{maturity_uncertain || !projected_maturity_date ? t("phenology.harvestUncertain") : projected_maturity_date}</span>
+            </div>
           </div>
+          <CollapseToggleButton expanded={expanded} onToggle={() => setExpanded(x => !x)} />
         </div>
-      </div>
+      </CollapsibleHeader>
 
+      <CollapsibleBody expanded={expanded}>
       {/* Primary Phenology Metric Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
 
@@ -125,6 +138,7 @@ export function PhenologyGauge({ phenology }) {
         <PhenologyTimeline stages={all_stages} progressPct={progress_pct} />
 
       </div>
+      </CollapsibleBody>
 
     </div>
   );

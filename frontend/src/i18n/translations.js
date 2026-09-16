@@ -4,6 +4,10 @@
 
 export const translations = {
   es: {
+    common: {
+      expandSection: "Expandir sección",
+      collapseSection: "Contraer sección"
+    },
     app: {
       loading: "Consultando el ensemble de 3 fuentes climáticas, el histórico ERA5 y el modelo de fenología...",
       connectionError: "No se pudo conectar con el servidor de PACHA. Intentá de nuevo en unos segundos.",
@@ -104,6 +108,7 @@ export const translations = {
       title: "Recomendación de Productos Anti-Estrés con Base Científica",
       subtitle: "Bioestimulantes y mitigantes nutricionales según etapa fenológica y severidad del estrés",
       printButton: "Imprimir Informe",
+      countBadge: "{n} recomendaciones",
       dosage: "Dosis",
       activeIngredients: "INGREDIENTES ACTIVOS",
       applicationWindow: "VENTANA DE APLICACIÓN",
@@ -145,6 +150,10 @@ export const translations = {
   },
 
   en: {
+    common: {
+      expandSection: "Expand section",
+      collapseSection: "Collapse section"
+    },
     app: {
       loading: "Querying 3-Source Forecast Ensemble, ERA5 Historical Climate, and GDD Phenology...",
       connectionError: "Could not connect to the PACHA backend. Please try again in a few seconds.",
@@ -245,6 +254,7 @@ export const translations = {
       title: "Scientifically Proved Anti-Stress Product Advisory",
       subtitle: "Biostimulant & nutritional mitigants tailored to phenology stage and stress severity",
       printButton: "Print Advisory Report",
+      countBadge: "{n} recommendations",
       dosage: "Dosage",
       activeIngredients: "ACTIVE INGREDIENTS",
       applicationWindow: "APPLICATION WINDOW",

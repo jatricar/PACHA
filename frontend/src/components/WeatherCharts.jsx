@@ -11,10 +11,27 @@ import {
   CartesianGrid
 } from "recharts";
 import { useLanguage } from "../i18n/LanguageContext";
+import { useCollapsible } from "../hooks/useCollapsible";
+import { CollapseToggleButton, CollapsibleBody, CollapsibleHeader } from "./CollapsibleSection";
 
 export function WeatherCharts({ forecast7days, historicalBaseline }) {
   const { t } = useLanguage();
+  const [expanded, setExpanded] = useCollapsible("weather", true);
   if (!forecast7days || forecast7days.length === 0) return null;
+
+  const toggle = () => {
+    setExpanded(x => {
+      const next = !x;
+      if (next) {
+        // recharts' ResponsiveContainer measures its container via
+        // ResizeObserver, which the grid-rows collapse animation should
+        // trigger on its own - but window resize is a reliable extra nudge
+        // in case a chart was mounted while the section was still closed.
+        setTimeout(() => window.dispatchEvent(new Event("resize")), 360);
+      }
+      return next;
+    });
+  };
 
   const chartData = forecast7days.map(day => {
     const monthNum = new Date(day.date).getMonth() + 1;
@@ -35,7 +52,11 @@ export function WeatherCharts({ forecast7days, historicalBaseline }) {
   return (
     <div className="glass-card" style={{ padding: "1.25rem" }}>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+      <CollapsibleHeader
+        expanded={expanded}
+        onToggle={toggle}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}
+      >
         <div>
           <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "#06b6d4", fontWeight: "700" }}>
             {t("weather.sectionTitle")}
@@ -47,8 +68,10 @@ export function WeatherCharts({ forecast7days, historicalBaseline }) {
             {t("weather.sourcesNote")}
           </p>
         </div>
-      </div>
+        <CollapseToggleButton expanded={expanded} onToggle={toggle} />
+      </CollapsibleHeader>
 
+      <CollapsibleBody expanded={expanded}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
 
         {/* Chart 1: Temperature vs Historical Norms */}
@@ -95,6 +118,7 @@ export function WeatherCharts({ forecast7days, historicalBaseline }) {
         </div>
 
       </div>
+      </CollapsibleBody>
 
     </div>
   );

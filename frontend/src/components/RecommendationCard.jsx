@@ -1,19 +1,27 @@
 import React from "react";
 import { Sparkles, FlaskConical, Clock, Printer } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
+import { useCollapsible } from "../hooks/useCollapsible";
+import { CollapseToggleButton, CollapsibleBody, CollapsibleHeader } from "./CollapsibleSection";
 
 export function RecommendationCard({ recommendations, fieldInfo }) {
   const { t } = useLanguage();
+  const [expanded, setExpanded] = useCollapsible("recommendations", true);
   if (!recommendations || recommendations.length === 0) return null;
 
-  const handlePrint = () => {
+  const handlePrint = (e) => {
+    e.stopPropagation(); // don't also toggle the section when printing
     window.print();
   };
 
   return (
     <div className="glass-card" style={{ padding: "1.25rem" }}>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+      <CollapsibleHeader
+        expanded={expanded}
+        onToggle={() => setExpanded(x => !x)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}
+      >
         <div>
           <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "#10b981", fontWeight: "700" }}>
             {t("recommendations.sectionTitle")}
@@ -22,16 +30,20 @@ export function RecommendationCard({ recommendations, fieldInfo }) {
             {t("recommendations.title")}
           </h2>
           <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-            {t("recommendations.subtitle")}
+            {t("recommendations.subtitle")} &middot; {t("recommendations.countBadge", { n: recommendations.length })}
           </p>
         </div>
 
-        <button onClick={handlePrint} className="btn-outline no-print">
-          <Printer size={16} />
-          <span>{t("recommendations.printButton")}</span>
-        </button>
-      </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <button onClick={handlePrint} className="btn-outline no-print">
+            <Printer size={16} />
+            <span>{t("recommendations.printButton")}</span>
+          </button>
+          <CollapseToggleButton expanded={expanded} onToggle={() => setExpanded(x => !x)} />
+        </div>
+      </CollapsibleHeader>
 
+      <CollapsibleBody expanded={expanded}>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {recommendations.map((rec, idx) => (
           <div
@@ -111,6 +123,7 @@ export function RecommendationCard({ recommendations, fieldInfo }) {
           </div>
         ))}
       </div>
+      </CollapsibleBody>
 
     </div>
   );

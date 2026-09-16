@@ -155,6 +155,37 @@ body {
   color: var(--text-muted) !important;
 }
 
+/* Expandable dashboard cards (Phenology, Stress, Weather, Recommendations) */
+.collapsible-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease;
+}
+.collapsible-body.expanded {
+  grid-template-rows: 1fr;
+}
+.collapsible-body-inner {
+  overflow: hidden;
+}
+.collapse-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.collapse-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
 /* Badges */
 .badge {
   display: inline-flex;
@@ -230,6 +261,12 @@ body {
   }
   .no-print {
     display: none !important;
+  }
+  /* A collapsed card's content is 0-height on screen - force it fully open
+     for printing, otherwise "Print Advisory Report" can silently print an
+     empty recommendations section if the user had it collapsed. */
+  .collapsible-body {
+    grid-template-rows: 1fr !important;
   }
   .glass-card, .glass-panel {
     background: #ffffff !important;

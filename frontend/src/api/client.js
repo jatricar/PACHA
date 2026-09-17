@@ -106,3 +106,23 @@ export async function updateUserTier(userId, tier) {
   if (!res.ok) throw new Error(await parseErrorDetail(res));
   return res.json();
 }
+
+// World Report: a long-running batch job (217 stations x ~25 years of real
+// historical weather each), so it runs in the background on the server -
+// start it, then poll status until it's done rather than a single long
+// synchronous request Render's free-tier proxy would likely time out.
+
+export async function startWorldReport(lang) {
+  const res = await fetch(`${API_BASE}/admin/world-report/generate?lang=${lang || "es"}`, {
+    method: "POST",
+    headers: await authHeaders()
+  });
+  if (!res.ok) throw new Error(await parseErrorDetail(res));
+  return res.json();
+}
+
+export async function fetchWorldReportStatus() {
+  const res = await fetch(`${API_BASE}/admin/world-report/status`, { headers: await authHeaders() });
+  if (!res.ok) throw new Error(await parseErrorDetail(res));
+  return res.json();
+}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Users, BarChart3, Loader2 } from "lucide-react";
+import { ArrowLeft, Users, BarChart3, Loader2, Globe2 } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { fetchAdminUsers, fetchAdminUsageSummary, updateUserTier } from "../api/client";
+import { WorldReportPanel } from "./WorldReportPanel";
 
 export function AdminPage({ onClose }) {
   const { t } = useLanguage();
@@ -65,9 +66,18 @@ export function AdminPage({ onClose }) {
           <BarChart3 size={16} />
           <span>{t("admin.usageTab")}</span>
         </button>
+        <button
+          onClick={() => setTab("worldreport")}
+          className={tab === "worldreport" ? "btn-emerald" : "btn-outline"}
+        >
+          <Globe2 size={16} />
+          <span>{t("admin.worldReportTab")}</span>
+        </button>
       </div>
 
-      {loading ? (
+      {tab === "worldreport" ? (
+        <WorldReportPanel />
+      ) : loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
           <Loader2 size={32} className="animate-spin" color="#10b981" />
         </div>

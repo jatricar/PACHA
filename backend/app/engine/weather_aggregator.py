@@ -452,6 +452,29 @@ class WeatherAggregatorEngine:
         self._gdd_series_cache[cache_key] = {"data": combined, "fetched_at": time.time()}
         return combined
 
+    async def get_multi_year_daily_series(self, lat: float, lon: float, years_back: int = 20) -> Dict[str, Dict[str, Any]]:
+        """Raw daily ERA5 records (date -> temp_max/temp_min/temp_avg/humidity_avg/
+        precipitation) for a long continuous historical window, e.g. for
+        simulating a crop's development against many individual past years'
+        real weather rather than a single climatological average. One HTTP
+        call covers the whole window; callers slice it per simulated year.
+        Cached like get_historical_baseline, since a report covering many
+        stations would otherwise re-fetch decades of data on every retry."""
+        cache_key = f"multiyear_{round(lat, 2)}_{round(lon, 2)}_{years_back}"
+        cached = self._era5_cache.get(cache_key)
+        if cached and (time.time() - cached["fetched_at"]) < self._era5_cache_ttl_seconds:
+            return cached["data"]
+
+        end_date = datetime.now(timezone.utc).date() - timedelta(days=7)
+        try:
+            start_date = end_date.replace(year=end_date.year - years_back)
+        except ValueError:
+            start_date = end_date.replace(month=2, day=28, year=end_date.year - years_back)
+
+        daily_series = await self._fetch_with_retries(self._fetch_era5_raw_daily, lat, lon, start_date, end_date)
+        self._era5_cache[cache_key] = {"data": daily_series, "fetched_at": time.time()}
+        return daily_series
+
     async def _fetch_era5_monthly_climatology(self, lat: float, lon: float, years: int) -> Dict[str, Any]:
         # ERA5 reanalysis via Open-Meteo's archive API typically lags ~5-7 days
         # behind real time, so end a week back to guarantee availability.

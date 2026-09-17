@@ -1,14 +1,66 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
+from datetime import datetime, timezone
+import asyncio
+import logging
 from app.core.database import get_db
 from app.core.auth import require_admin, CurrentUser
+from app.engine.historical_ensemble import run_world_report
 from app.models.domain import (
     FieldEntity, UserProfileEntity, UsageEventEntity,
     AdminUsersResponseSchema, AdminUserSummarySchema, AdminUsageSummarySchema
 )
 
+logger = logging.getLogger("pacha.admin")
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+# In-memory job state for the World Report background job. A single admin,
+# single backend process, one-off/occasional operation - doesn't warrant a
+# real job queue (Celery/Redis aren't part of this stack), and Render's free
+# tier reverse proxy would very likely time out a single synchronous request
+# that takes several minutes to run 217 external weather-API calls, hence
+# running it as a background task the frontend polls instead.
+_world_report_job = {"status": "idle", "completed": 0, "total": 0, "result": None, "error": None, "started_at": None}
+
+
+@router.post("/world-report/generate")
+async def start_world_report(
+    lang: str = Query(default="es"),
+    years_back: int = Query(default=25, ge=5, le=40),
+    _: CurrentUser = Depends(require_admin),
+):
+    """Kicks off the historical world-report batch job in the background and
+    returns immediately - poll GET /admin/world-report/status for progress
+    and the final result. Refuses to start a second run while one is
+    already in progress (217 external API calls is enough load already)."""
+    if _world_report_job["status"] == "running":
+        raise HTTPException(status_code=409, detail="A world report generation is already running")
+
+    _world_report_job.update(status="running", completed=0, total=0, result=None, error=None,
+                              started_at=datetime.now(timezone.utc).isoformat())
+
+    def on_progress(completed: int, total: int):
+        _world_report_job["completed"] = completed
+        _world_report_job["total"] = total
+
+    async def run_job():
+        try:
+            result = await run_world_report(lang=lang, years_back=years_back, on_progress=on_progress)
+            _world_report_job.update(status="done", result=result)
+        except Exception as e:
+            logger.error("World report job crashed: %s: %s", type(e).__name__, e)
+            _world_report_job.update(status="error", error=f"{type(e).__name__}: {e}")
+
+    asyncio.create_task(run_job())
+    return {"status": "started"}
+
+
+@router.get("/world-report/status")
+def world_report_status(_: CurrentUser = Depends(require_admin)):
+    """Current progress/result of the background job started above. The
+    frontend polls this every few seconds while status == 'running'."""
+    return _world_report_job
 
 
 @router.get("/users", response_model=AdminUsersResponseSchema)

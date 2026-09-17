@@ -49,6 +49,28 @@ logger = logging.getLogger("pacha.world_report")
 
 CROP_ID_ALIASES = {"maize_corn": "maize"}
 
+
+class _RateLimiter:
+    """Enforces a minimum gap between the START of consecutive requests
+    across ALL concurrently-running stations, on top of (not instead of)
+    limiting how many are in flight at once. Open-Meteo's archive endpoint
+    rate-limited this job hard on the first run at concurrency=6 with no
+    inter-request spacing (178 of 217 stations came back 429); this throttles
+    proactively instead of only reacting after getting blocked."""
+
+    def __init__(self, min_interval_seconds: float):
+        self.min_interval = min_interval_seconds
+        self._lock = asyncio.Lock()
+        self._next_allowed = 0.0
+
+    async def wait(self):
+        async with self._lock:
+            now = asyncio.get_event_loop().time()
+            delay = max(0.0, self._next_allowed - now)
+            self._next_allowed = max(now, self._next_allowed) + self.min_interval
+        if delay > 0:
+            await asyncio.sleep(delay)
+
 # Same severity score mapping stress_analyzer.py uses, so a pseudo-stress
 # built from this module sorts identically when handed to the shared
 # recommendation engine.
@@ -256,6 +278,7 @@ async def run_station_ensemble(
     station: Dict[str, Any],
     years_back: int = 25,
     lang: str = "es",
+    rate_limiter: Optional[_RateLimiter] = None,
 ) -> Dict[str, Any]:
     """Full historical ensemble for one station: fetches its multi-decade
     daily series once, replays the planting date against every usable
@@ -273,6 +296,8 @@ async def run_station_ensemble(
         CROP_MAX_CYCLE_DAYS.get(crop_id, DEFAULT_MAX_CYCLE_DAYS) + 60,
     )
 
+    if rate_limiter:
+        await rate_limiter.wait()
     daily_series = await weather_engine.get_multi_year_daily_series(station["latitude"], station["longitude"], years_back)
     if not daily_series:
         raise RuntimeError("No historical weather data returned for this location")
@@ -427,7 +452,8 @@ async def run_station_ensemble(
 async def run_world_report(
     lang: str = "es",
     years_back: int = 25,
-    concurrency: int = 6,
+    concurrency: int = 2,
+    min_request_interval: float = 2.0,
     on_progress=None,
 ) -> Dict[str, Any]:
     """Runs the full historical ensemble for every station in
@@ -435,6 +461,13 @@ async def run_world_report(
     (e.g. a transient archive-API error) is recorded as an error entry
     rather than aborting the whole batch - with 217 external calls,
     some transient failures are expected.
+
+    Defaults are deliberately conservative (low concurrency + a shared
+    minimum gap between request starts): a first run at concurrency=6 with
+    no spacing got 178 of 217 stations rate-limited (HTTP 429) by
+    Open-Meteo's archive endpoint. This trades a longer total run (an
+    occasional admin-triggered batch job, not a live user-facing request)
+    for actually completing.
 
     on_progress(completed, total), if given, is called after each station
     finishes (success or failure) - lets a caller expose live progress for
@@ -445,6 +478,7 @@ async def run_world_report(
         stations = json.load(f)["stations"]
 
     semaphore = asyncio.Semaphore(concurrency)
+    rate_limiter = _RateLimiter(min_request_interval)
     errors: List[Dict[str, str]] = []
     by_crop: Dict[str, List[Dict[str, Any]]] = {}
     completed_count = 0
@@ -453,7 +487,7 @@ async def run_world_report(
         nonlocal completed_count
         async with semaphore:
             try:
-                report = await run_station_ensemble(station, years_back=years_back, lang=lang)
+                report = await run_station_ensemble(station, years_back=years_back, lang=lang, rate_limiter=rate_limiter)
                 crop_id = report["crop_id"]
                 by_crop.setdefault(crop_id, []).append(report)
             except Exception as e:

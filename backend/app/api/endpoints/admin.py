@@ -28,12 +28,20 @@ _world_report_job = {"status": "idle", "completed": 0, "total": 0, "result": Non
 async def start_world_report(
     lang: str = Query(default="es"),
     years_back: int = Query(default=25, ge=5, le=40),
+    concurrency: int = Query(default=2, ge=1, le=10, description="Simultaneous in-flight requests to the archive API"),
+    min_request_interval: float = Query(default=2.0, ge=0.5, le=15.0, description="Minimum seconds between request starts, shared across all stations"),
     _: CurrentUser = Depends(require_admin),
 ):
     """Kicks off the historical world-report batch job in the background and
     returns immediately - poll GET /admin/world-report/status for progress
     and the final result. Refuses to start a second run while one is
-    already in progress (217 external API calls is enough load already)."""
+    already in progress (217 external API calls is enough load already).
+
+    concurrency/min_request_interval default to conservative values after a
+    first run at concurrency=6 with no throttling got 178/217 stations
+    rate-limited (HTTP 429) by Open-Meteo's archive endpoint - exposed as
+    query params so they can be tuned from the admin panel if still needed,
+    without a redeploy."""
     if _world_report_job["status"] == "running":
         raise HTTPException(status_code=409, detail="A world report generation is already running")
 
@@ -46,7 +54,11 @@ async def start_world_report(
 
     async def run_job():
         try:
-            result = await run_world_report(lang=lang, years_back=years_back, on_progress=on_progress)
+            result = await run_world_report(
+                lang=lang, years_back=years_back,
+                concurrency=concurrency, min_request_interval=min_request_interval,
+                on_progress=on_progress,
+            )
             _world_report_job.update(status="done", result=result)
         except Exception as e:
             logger.error("World report job crashed: %s: %s", type(e).__name__, e)

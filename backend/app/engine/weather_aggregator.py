@@ -452,6 +452,38 @@ class WeatherAggregatorEngine:
         self._gdd_series_cache[cache_key] = {"data": combined, "fetched_at": time.time()}
         return combined
 
+    async def _fetch_with_backoff_for_batch(
+        self, coro_func, *args, max_attempts: int = 6, base_delay: float = 10.0, **kwargs
+    ):
+        """Patient retry for background batch jobs (the World Report), as
+        opposed to _fetch_with_retries above which is tuned for live,
+        user-facing requests where a long wait would hurt the app's UX.
+        Specifically backs off hard on HTTP 429 (rate limited) - honoring
+        the server's Retry-After header when present, otherwise exponential
+        backoff - since a fixed 1.5s retry does nothing useful against a
+        rate limiter that needs tens of seconds to reset."""
+        last_exc = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                return await coro_func(*args, **kwargs)
+            except httpx.HTTPStatusError as e:
+                last_exc = e
+                if e.response.status_code == 429:
+                    retry_after = e.response.headers.get("Retry-After")
+                    delay = float(retry_after) if retry_after else min(120.0, base_delay * (2 ** (attempt - 1)))
+                    logger.warning("Rate limited (429), attempt %d/%d - waiting %.0fs", attempt, max_attempts, delay)
+                else:
+                    delay = self.fetch_retry_delay
+                    logger.warning("Batch fetch failed (attempt %d/%d): %s", attempt, max_attempts, e)
+                if attempt < max_attempts:
+                    await asyncio.sleep(delay)
+            except Exception as e:
+                last_exc = e
+                logger.warning("Batch fetch failed (attempt %d/%d): %s: %s", attempt, max_attempts, type(e).__name__, e)
+                if attempt < max_attempts:
+                    await asyncio.sleep(self.fetch_retry_delay)
+        raise last_exc
+
     async def get_multi_year_daily_series(self, lat: float, lon: float, years_back: int = 20) -> Dict[str, Dict[str, Any]]:
         """Raw daily ERA5 records (date -> temp_max/temp_min/temp_avg/humidity_avg/
         precipitation) for a long continuous historical window, e.g. for
@@ -471,7 +503,7 @@ class WeatherAggregatorEngine:
         except ValueError:
             start_date = end_date.replace(month=2, day=28, year=end_date.year - years_back)
 
-        daily_series = await self._fetch_with_retries(self._fetch_era5_raw_daily, lat, lon, start_date, end_date)
+        daily_series = await self._fetch_with_backoff_for_batch(self._fetch_era5_raw_daily, lat, lon, start_date, end_date)
         self._era5_cache[cache_key] = {"data": daily_series, "fetched_at": time.time()}
         return daily_series
 

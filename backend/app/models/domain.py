@@ -53,6 +53,9 @@ class FieldCreateSchema(BaseModel):
     planting_date: str = PydanticField(..., example="2026-05-10")
     notes: Optional[str] = None
 
+class FieldRenameSchema(BaseModel):
+    name: str = PydanticField(..., min_length=1, max_length=200, example="North Field - Plot 4 (renamed)")
+
 class FieldResponseSchema(FieldCreateSchema):
     id: int
     created_at: datetime

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { X, Plus, Trash2, Activity, Loader2, MapPin } from "lucide-react";
+import { X, Plus, Trash2, Activity, Loader2, MapPin, Pencil } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
-import { fetchUserFields, createFieldForUser, deleteField, analyzeFieldById } from "../api/client";
+import { fetchUserFields, createFieldForUser, deleteField, renameField, analyzeFieldById } from "../api/client";
 import { FieldModal } from "./FieldModal";
 import { PhenologyGauge } from "./PhenologyGauge";
 import { StressRiskRadar } from "./StressRiskRadar";
@@ -52,6 +52,13 @@ export function AdminUserFieldsPanel({ user, onClose }) {
     if (!window.confirm(t("adminFields.confirmDelete"))) return;
     await deleteField(fieldId);
     if (activeFieldId === fieldId) { setActiveFieldId(null); setAnalysis(null); }
+    loadFields();
+  };
+
+  const handleRename = async (field) => {
+    const newName = window.prompt(t("adminFields.renamePrompt"), field.name);
+    if (!newName || !newName.trim() || newName.trim() === field.name) return;
+    await renameField(field.id, newName.trim());
     loadFields();
   };
 
@@ -119,6 +126,9 @@ export function AdminUserFieldsPanel({ user, onClose }) {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+                    <button onClick={() => handleRename(f)} className="btn-outline" style={{ padding: "0.4rem 0.7rem" }}>
+                      <Pencil size={14} />
+                    </button>
                     <button onClick={() => handleViewAnalysis(f.id)} className="btn-outline" style={{ padding: "0.4rem 0.7rem", fontSize: "0.78rem" }}>
                       <Activity size={14} />
                       <span>{activeFieldId === f.id ? t("adminFields.hideAnalysis") : t("adminFields.viewAnalysis")}</span>

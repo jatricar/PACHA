@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user, CurrentUser
 from app.core.config import TIER_FIELD_LIMITS
-from app.models.domain import FieldEntity, FieldCreateSchema, FieldResponseSchema, FieldUsageSummarySchema, UserProfileEntity
+from app.models.domain import FieldEntity, FieldCreateSchema, FieldRenameSchema, FieldResponseSchema, FieldUsageSummarySchema, UserProfileEntity
 from app.engine.usage_tracking import log_usage_event
 
 router = APIRouter(prefix="/fields", tags=["Fields"])
@@ -109,6 +109,30 @@ def get_field(
     field_item = query.first()
     if not field_item:
         raise HTTPException(status_code=404, detail="Field not found")
+    return field_item
+
+
+@router.patch("/{field_id}", response_model=FieldResponseSchema)
+def rename_field(
+    field_id: int,
+    payload: FieldRenameSchema,
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Renames a field - the owner, or an admin acting on a user's behalf.
+    Deliberately name-only (not a general edit-any-field endpoint): changing
+    location/crop/planting date after the fact would invalidate any analysis
+    the user already looked at under the old identity, whereas a typo fix or
+    relabeling the same physical plot doesn't."""
+    query = db.query(FieldEntity).filter(FieldEntity.id == field_id)
+    if not current_user.is_admin():
+        query = query.filter(FieldEntity.user_id == current_user.id)
+    field_item = query.first()
+    if not field_item:
+        raise HTTPException(status_code=404, detail="Field not found")
+    field_item.name = payload.name
+    db.commit()
+    db.refresh(field_item)
     return field_item
 
 

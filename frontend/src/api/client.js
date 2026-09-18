@@ -69,6 +69,16 @@ export async function deleteField(fieldId) {
   return res.json();
 }
 
+export async function renameField(fieldId, name) {
+  const res = await fetch(`${API_BASE}/fields/${fieldId}`, {
+    method: "PATCH",
+    headers: { ...(await authHeaders()), "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) throw new Error(await parseErrorDetail(res));
+  return res.json();
+}
+
 export async function analyzeAdhocStress({ latitude, longitude, crop_id, planting_date, variety, maturity_class, lang }) {
   const params = new URLSearchParams({
     latitude,

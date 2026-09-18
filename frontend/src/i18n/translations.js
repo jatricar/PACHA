@@ -117,6 +117,7 @@ export const translations = {
     savedFields: {
       label: "Lotes Guardados ({n}):",
       deleteTitle: "Eliminar lote guardado",
+      renameTitle: "Renombrar lote",
       usage: "{used}/{limit} lotes usados ({tier})",
       usageLimitReached: "Alcanzaste el límite de tu plan. Contactá al administrador para ampliarlo."
     },
@@ -197,7 +198,8 @@ export const translations = {
       noFields: "Este usuario todavía no cargó ningún lote.",
       viewAnalysis: "Ver Análisis",
       hideAnalysis: "Ocultar Análisis",
-      confirmDelete: "¿Eliminar este lote? Esta acción no se puede deshacer."
+      confirmDelete: "¿Eliminar este lote? Esta acción no se puede deshacer.",
+      renamePrompt: "Nuevo nombre para el lote:"
     }
   },
 
@@ -315,6 +317,7 @@ export const translations = {
     savedFields: {
       label: "Saved Fields ({n}):",
       deleteTitle: "Delete saved field",
+      renameTitle: "Rename field",
       usage: "{used}/{limit} fields used ({tier})",
       usageLimitReached: "You've reached your plan's limit. Contact the admin to raise it."
     },
@@ -395,7 +398,8 @@ export const translations = {
       noFields: "This user hasn't added any fields yet.",
       viewAnalysis: "View Analysis",
       hideAnalysis: "Hide Analysis",
-      confirmDelete: "Delete this field? This can't be undone."
+      confirmDelete: "Delete this field? This can't be undone.",
+      renamePrompt: "New name for this field:"
     }
   }
 };

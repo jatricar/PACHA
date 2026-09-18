@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { MapPin, Trash2, ChevronDown } from "lucide-react";
+import { MapPin, Trash2, ChevronDown, Pencil, Check, X as XIcon } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 
-export function SavedFieldsBar({ savedFields, activeFieldId, onSelectField, onDeleteField, usage }) {
+export function SavedFieldsBar({ savedFields, activeFieldId, onSelectField, onDeleteField, onRenameField, usage }) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState("");
   const btnRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -41,6 +43,17 @@ export function SavedFieldsBar({ savedFields, activeFieldId, onSelectField, onDe
       setPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
     }
     setOpen(prev => !prev);
+  };
+
+  const startEditing = (f) => {
+    setEditingId(f.id);
+    setEditValue(f.name);
+  };
+
+  const commitEdit = () => {
+    const trimmed = editValue.trim();
+    if (trimmed && onRenameField) onRenameField(editingId, trimmed);
+    setEditingId(null);
   };
 
   return (
@@ -102,6 +115,33 @@ export function SavedFieldsBar({ savedFields, activeFieldId, onSelectField, onDe
         >
           {savedFields.map(f => {
             const isActive = f.id === activeFieldId;
+            const isEditing = editingId === f.id;
+
+            if (isEditing) {
+              return (
+                <div key={f.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.6rem" }}>
+                  <input
+                    autoFocus
+                    className="input-glass"
+                    style={{ padding: "0.3rem 0.5rem", fontSize: "0.85rem" }}
+                    value={editValue}
+                    onChange={e => setEditValue(e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") commitEdit();
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                  />
+                  <button onClick={(e) => { e.stopPropagation(); commitEdit(); }} style={{ background: "none", border: "none", color: "#10b981", cursor: "pointer", padding: "2px" }}>
+                    <Check size={15} />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setEditingId(null); }} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "2px" }}>
+                    <XIcon size={15} />
+                  </button>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={f.id}
@@ -123,13 +163,22 @@ export function SavedFieldsBar({ savedFields, activeFieldId, onSelectField, onDe
                     {f.name} ({t(`crops.${f.crop_id}`)})
                   </span>
                 </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDeleteField(f.id); }}
-                  style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: "2px", flexShrink: 0 }}
-                  title={t("savedFields.deleteTitle")}
-                >
-                  <Trash2 size={13} />
-                </button>
+                <span style={{ display: "flex", gap: "0.3rem", flexShrink: 0 }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startEditing(f); }}
+                    style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: "2px" }}
+                    title={t("savedFields.renameTitle")}
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDeleteField(f.id); }}
+                    style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: "2px" }}
+                    title={t("savedFields.deleteTitle")}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </span>
               </div>
             );
           })}

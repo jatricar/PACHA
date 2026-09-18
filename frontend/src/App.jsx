@@ -8,7 +8,7 @@ import { RecommendationCard } from "./components/RecommendationCard";
 import { SavedFieldsBar } from "./components/SavedFieldsBar";
 import { LoginScreen } from "./components/LoginScreen";
 import { AdminPage } from "./components/AdminPage";
-import { fetchSavedFields, createField, deleteField, analyzeAdhocStress, fetchUsageSummary, fetchAdminUsers } from "./api/client";
+import { fetchSavedFields, createField, deleteField, renameField, analyzeAdhocStress, fetchUsageSummary, fetchAdminUsers } from "./api/client";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useLanguage } from "./i18n/LanguageContext";
 import { useAuth } from "./auth/AuthContext";
@@ -156,6 +156,14 @@ export default function App() {
     } catch (err) {}
   };
 
+  const handleRenameField = async (fieldId, newName) => {
+    try {
+      const updated = await renameField(fieldId, newName);
+      setSavedFields(prev => prev.map(f => f.id === fieldId ? updated : f));
+      setActiveField(prev => (prev && prev.id === fieldId ? updated : prev));
+    } catch (err) {}
+  };
+
   // --- Auth gating ---
   if (authLoading) {
     return (
@@ -191,6 +199,7 @@ export default function App() {
         activeFieldId={activeField?.id}
         onSelectField={(f) => setActiveField(f)}
         onDeleteField={handleDeleteField}
+        onRenameField={handleRenameField}
         usage={usage}
       />
 

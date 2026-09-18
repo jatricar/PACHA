@@ -140,6 +140,7 @@ class PhenologyGDDEngine:
             stage_obj = {
                 "name": stg["name_es"] if lang == "es" and stg.get("name_es") else stg["name"],
                 "bbch": stg["bbch"],
+                "phase": stg.get("phase", "germination"),
                 "gdd_pct": stg_gdd_pct,
                 "heat_threshold": stg["heat_threshold"],
                 "vpd_max_threshold": stg["vpd_max_threshold"],

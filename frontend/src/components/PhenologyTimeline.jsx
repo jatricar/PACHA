@@ -3,28 +3,29 @@ import { Sprout, Leaf, Flower2, Wheat, PackageCheck } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 
 /**
- * Maps a crop-specific BBCH stage name (e.g. "Tasseling & Silking (VT-R1)")
- * to one of five universal growth phases, so every crop - grain, tuber, or
- * cane - reads on the same five-icon visual language. Order matters: check
- * the most "terminal" wording first, since a final stage's name often also
- * mentions its own filling/flowering process (e.g. "Bunch Development &
- * Fruit Ripening" should read as ripening, not filling).
+ * Maps a stage's language-independent `phase` (assigned once per crop in
+ * crops_database.json, not guessed from the stage name text) to an icon and
+ * a translation key, so every crop - grain, tuber, or cane - reads on the
+ * same five-icon visual language regardless of which language the stage
+ * name itself is displayed in.
+ *
+ * Previously this was inferred by regex-matching English keywords in the
+ * stage's own name (e.g. "flower", "ripen") - which silently broke for
+ * every stage once the name was localized to Spanish, since none of those
+ * English patterns ever matched the translated text, so every stage fell
+ * through to the same default. Backing this off a fixed per-stage field is
+ * immune to that by construction.
  */
-function phaseForStage(name) {
-  const n = name.toLowerCase();
-  if (/ripen|harvest|maturity|maturation|dormancy/.test(n)) {
-    return { Icon: PackageCheck, key: "phaseRipening" };
-  }
-  if (/flower|tassel|head|anthesis|inflorescence|panicle|silking|sex determination/.test(n)) {
-    return { Icon: Flower2, key: "phaseFlowering" };
-  }
-  if (/grain fill|pod|tuber|bulking|storage|sucrose|bunch|fruit|milk|dough/.test(n)) {
-    return { Icon: Wheat, key: "phaseFilling" };
-  }
-  if (/tiller|vegetat|canopy|rosette|vine|leaf|stem elong/.test(n)) {
-    return { Icon: Leaf, key: "phaseGrowth" };
-  }
-  return { Icon: Sprout, key: "phaseGermination" };
+const PHASE_ICON = {
+  germination: { Icon: Sprout, key: "phaseGermination" },
+  growth: { Icon: Leaf, key: "phaseGrowth" },
+  flowering: { Icon: Flower2, key: "phaseFlowering" },
+  filling: { Icon: Wheat, key: "phaseFilling" },
+  ripening: { Icon: PackageCheck, key: "phaseRipening" },
+};
+
+function phaseForStage(phase) {
+  return PHASE_ICON[phase] || PHASE_ICON.germination;
 }
 
 /**
@@ -82,7 +83,7 @@ export function PhenologyTimeline({ stages, progressPct }) {
       {/* Stage nodes + labels */}
       <div style={{ position: "relative", marginTop: "-15px" }}>
         {positioned.map((stg, idx) => {
-          const { Icon, key: phaseKey } = phaseForStage(stg.name);
+          const { Icon, key: phaseKey } = phaseForStage(stg.phase);
           const state = stg.is_current ? "current" : stg.is_completed ? "done" : "upcoming";
           return (
             <div

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Users, BarChart3, Loader2, Globe2 } from "lucide-react";
+import { ArrowLeft, Users, BarChart3, Loader2, Globe2, FolderOpen } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { fetchAdminUsers, fetchAdminUsageSummary, updateUserTier } from "../api/client";
 import { WorldReportPanel } from "./WorldReportPanel";
+import { AdminUserFieldsPanel } from "./AdminUserFieldsPanel";
 
 export function AdminPage({ onClose }) {
   const { t } = useLanguage();
@@ -11,6 +12,7 @@ export function AdminPage({ onClose }) {
   const [usageData, setUsageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -116,9 +118,15 @@ export function AdminPage({ onClose }) {
                     </span>
                   </td>
                   <td style={{ padding: "0.5rem" }}>
-                    <button onClick={() => handleToggleTier(u.id, u.tier)} className="btn-outline" style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}>
-                      {u.tier === "premium" ? t("admin.makeFree") : t("admin.makePremium")}
-                    </button>
+                    <div style={{ display: "flex", gap: "0.4rem" }}>
+                      <button onClick={() => setSelectedUser(u)} className="btn-outline" style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}>
+                        <FolderOpen size={13} />
+                        <span>{t("adminFields.viewButton")}</span>
+                      </button>
+                      <button onClick={() => handleToggleTier(u.id, u.tier)} className="btn-outline" style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}>
+                        {u.tier === "premium" ? t("admin.makeFree") : t("admin.makePremium")}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -162,6 +170,10 @@ export function AdminPage({ onClose }) {
             ))}
           </div>
         </div>
+      )}
+
+      {selectedUser && (
+        <AdminUserFieldsPanel user={selectedUser} onClose={() => setSelectedUser(null)} />
       )}
 
     </div>

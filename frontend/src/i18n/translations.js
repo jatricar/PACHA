@@ -189,6 +189,15 @@ export const translations = {
       daysValue: "{n} ({min}–{max})",
       noRisks: "Sin riesgos relevantes",
       realFieldTag: "LOTE REAL"
+    },
+    adminFields: {
+      viewButton: "Ver Lotes",
+      title: "Lotes del Usuario",
+      addButton: "Agregar Lote",
+      noFields: "Este usuario todavía no cargó ningún lote.",
+      viewAnalysis: "Ver Análisis",
+      hideAnalysis: "Ocultar Análisis",
+      confirmDelete: "¿Eliminar este lote? Esta acción no se puede deshacer."
     }
   },
 
@@ -378,6 +387,15 @@ export const translations = {
       daysValue: "{n} ({min}\u2013{max})",
       noRisks: "No notable risks",
       realFieldTag: "REAL FIELD"
+    },
+    adminFields: {
+      viewButton: "View Fields",
+      title: "User's Fields",
+      addButton: "Add Field",
+      noFields: "This user hasn't added any fields yet.",
+      viewAnalysis: "View Analysis",
+      hideAnalysis: "Hide Analysis",
+      confirmDelete: "Delete this field? This can't be undone."
     }
   }
 };

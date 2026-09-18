@@ -101,12 +101,12 @@ async def analyze_stress_field(
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    """Analyze stress for a saved field by ID - only if it belongs to the authenticated user."""
-    field_item = (
-        db.query(FieldEntity)
-        .filter(FieldEntity.id == field_id, FieldEntity.user_id == current_user.id)
-        .first()
-    )
+    """Analyze stress for a saved field by ID - the owner, or an admin
+    acting on a user's behalf, can request it."""
+    query = db.query(FieldEntity).filter(FieldEntity.id == field_id)
+    if not current_user.is_admin():
+        query = query.filter(FieldEntity.user_id == current_user.id)
+    field_item = query.first()
     if not field_item:
         raise HTTPException(status_code=404, detail="Field not found")
 

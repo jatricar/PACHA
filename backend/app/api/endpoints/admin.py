@@ -2,14 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
 from datetime import datetime, timezone
+from typing import List
 import asyncio
 import logging
 from app.core.database import get_db
 from app.core.auth import require_admin, CurrentUser
 from app.engine.historical_ensemble import run_world_report
+from app.engine.usage_tracking import log_usage_event
 from app.models.domain import (
     FieldEntity, UserProfileEntity, UsageEventEntity,
-    AdminUsersResponseSchema, AdminUserSummarySchema, AdminUsageSummarySchema
+    AdminUsersResponseSchema, AdminUserSummarySchema, AdminUsageSummarySchema,
+    FieldCreateSchema, FieldResponseSchema
 )
 
 logger = logging.getLogger("pacha.admin")
@@ -135,6 +138,41 @@ def update_user_tier(
         profile.tier = tier
     db.commit()
     return {"user_id": user_id, "tier": tier}
+
+
+@router.get("/users/{user_id}/fields", response_model=List[FieldResponseSchema])
+def list_user_fields(
+    user_id: str,
+    db: Session = Depends(get_db),
+    _: CurrentUser = Depends(require_admin),
+):
+    """A given user's saved fields, for the admin to review or act on when
+    a colleague asks for help rather than doing it themselves."""
+    return (
+        db.query(FieldEntity)
+        .filter(FieldEntity.user_id == user_id)
+        .order_by(FieldEntity.created_at.desc())
+        .all()
+    )
+
+
+@router.post("/users/{user_id}/fields", response_model=FieldResponseSchema)
+def create_field_for_user(
+    user_id: str,
+    field_data: FieldCreateSchema,
+    db: Session = Depends(get_db),
+    admin_user: CurrentUser = Depends(require_admin),
+):
+    """Creates a field owned by the given user, not the admin - so it shows
+    up in that user's own "Lotes Guardados" exactly as if they'd added it
+    themselves. Bypasses their plan's field limit, same as an admin's own
+    fields do, since this is the admin doing the work FOR them."""
+    field_item = FieldEntity(**field_data.model_dump(), user_id=user_id)
+    db.add(field_item)
+    db.commit()
+    db.refresh(field_item)
+    log_usage_event(db, user_id, "field_created", {"crop_id": field_item.crop_id, "created_by_admin": admin_user.id})
+    return field_item
 
 
 @router.get("/usage-summary", response_model=AdminUsageSummarySchema)

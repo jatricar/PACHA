@@ -84,6 +84,30 @@ export async function analyzeAdhocStress({ latitude, longitude, crop_id, plantin
   return res.json();
 }
 
+export async function analyzeFieldById(fieldId, lang) {
+  const res = await fetch(`${API_BASE}/stress/analyze/field/${fieldId}?lang=${lang || "en"}`, { headers: await authHeaders() });
+  if (!res.ok) throw new Error(await parseErrorDetail(res));
+  return res.json();
+}
+
+// Admin: viewing/managing another user's fields on their behalf.
+
+export async function fetchUserFields(userId) {
+  const res = await fetch(`${API_BASE}/admin/users/${encodeURIComponent(userId)}/fields`, { headers: await authHeaders() });
+  if (!res.ok) throw new Error(await parseErrorDetail(res));
+  return res.json();
+}
+
+export async function createFieldForUser(userId, fieldData) {
+  const res = await fetch(`${API_BASE}/admin/users/${encodeURIComponent(userId)}/fields`, {
+    method: "POST",
+    headers: { ...(await authHeaders()), "Content-Type": "application/json" },
+    body: JSON.stringify(fieldData)
+  });
+  if (!res.ok) throw new Error(await parseErrorDetail(res));
+  return res.json();
+}
+
 // --- Admin (require the signed-in user's email to be in ADMIN_EMAILS) ---
 
 export async function fetchAdminUsers() {

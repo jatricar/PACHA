@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Leaf, PlusCircle, RefreshCw, Globe, LogOut, ShieldCheck } from "lucide-react";
+import { Leaf, PlusCircle, RefreshCw, Globe, LogOut, ShieldCheck, MessageCircle } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { useAuth } from "../auth/AuthContext";
+import { getWhatsAppLink } from "../lib/contact";
 
 export function Navbar({ onOpenNewFieldModal, onRefresh, isLoading, isAdmin, onOpenAdmin }) {
   const { t, lang, setLang, supportedLanguages } = useLanguage();
@@ -97,6 +98,17 @@ export function Navbar({ onOpenNewFieldModal, onRefresh, isLoading, isAdmin, onO
             <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
             <span>{t("navbar.recalculate")}</span>
           </button>
+
+          <a
+            href={getWhatsAppLink(lang)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={t("navbar.whatsappTitle")}
+            className="btn-outline"
+            style={{ color: "#25D366", borderColor: "rgba(37,211,102,0.35)" }}
+          >
+            <MessageCircle size={16} />
+          </a>
 
           <button onClick={onOpenNewFieldModal} className="btn-emerald">
             <PlusCircle size={18} />

@@ -20,6 +20,7 @@ export const translations = {
       subtitle: "Predicción de estrés abiótico y recomendaciones anti-estrés para los 10 cultivos más cultivados del mundo",
       recalculate: "Recalcular",
       recalculateTitle: "Recalcular ensemble de 3 fuentes y fenología",
+      whatsappTitle: "Escribinos por WhatsApp",
       newField: "Nuevo Lote"
     },
     fieldModal: {
@@ -150,7 +151,8 @@ export const translations = {
       exampleAlertDesc: "Se esperan temperaturas mínimas cercanas al umbral de tolerancia de esta etapa en los próximos días.",
       exampleRecTitle: "Recomendación sugerida",
       exampleRecDesc: "Osmoprotector foliar preventivo, aplicado 48 horas antes del evento de frío pronosticado.",
-      footerCta: "¿Listo para probarlo con tu propio lote?"
+      footerCta: "¿Listo para probarlo con tu propio lote?",
+      whatsappLabel: "Escribinos"
     },
     admin: {
       title: "Panel de Administrador",
@@ -221,6 +223,7 @@ export const translations = {
       subtitle: "Abiotic stress prediction and anti-stress recommendations for the top 10 world crops",
       recalculate: "Recalculate",
       recalculateTitle: "Recalculate 3-source ensemble & phenology",
+      whatsappTitle: "Message us on WhatsApp",
       newField: "New Field"
     },
     fieldModal: {
@@ -351,7 +354,8 @@ export const translations = {
       exampleAlertDesc: "Minimum temperatures are expected to approach this stage's tolerance threshold in the coming days.",
       exampleRecTitle: "Suggested recommendation",
       exampleRecDesc: "Preventative foliar osmoprotectant, applied 48 hours ahead of the forecast cold event.",
-      footerCta: "Ready to try it with your own field?"
+      footerCta: "Ready to try it with your own field?",
+      whatsappLabel: "Message us"
     },
     admin: {
       title: "Admin Panel",

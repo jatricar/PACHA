@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Leaf, LogIn, MapPin, Sprout, Sparkles, Snowflake, FlaskConical, Globe } from "lucide-react";
+import { Leaf, LogIn, MapPin, Sprout, Sparkles, Snowflake, FlaskConical, Globe, MessageCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useLanguage } from "../i18n/LanguageContext";
+import { getWhatsAppLink } from "../lib/contact";
 
 /**
  * Public landing page shown before sign-in. Deliberately stays at the
@@ -50,27 +51,45 @@ export function LoginScreen() {
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "rgba(255,255,255,0.05)", borderRadius: "8px", padding: "0.2rem" }}>
-          <Globe size={14} color="var(--text-muted)" style={{ marginLeft: "0.3rem" }} />
-          {supportedLanguages.map(l => (
-            <button
-              key={l.code}
-              onClick={() => setLang(l.code)}
-              title={l.name}
-              style={{
-                border: "none",
-                cursor: "pointer",
-                padding: "0.25rem 0.5rem",
-                borderRadius: "6px",
-                fontSize: "0.75rem",
-                fontWeight: "700",
-                background: lang === l.code ? "var(--primary-emerald)" : "transparent",
-                color: lang === l.code ? "#ffffff" : "var(--text-muted)"
-              }}
-            >
-              {l.code.toUpperCase()}
-            </button>
-          ))}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <a
+            href={getWhatsAppLink(lang)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={t("navbar.whatsappTitle")}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.35rem",
+              background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.3)",
+              borderRadius: "8px", padding: "0.4rem 0.7rem", color: "#25D366",
+              fontSize: "0.78rem", fontWeight: "600", textDecoration: "none"
+            }}
+          >
+            <MessageCircle size={15} />
+            <span>{t("landing.whatsappLabel")}</span>
+          </a>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "rgba(255,255,255,0.05)", borderRadius: "8px", padding: "0.2rem" }}>
+            <Globe size={14} color="var(--text-muted)" style={{ marginLeft: "0.3rem" }} />
+            {supportedLanguages.map(l => (
+              <button
+                key={l.code}
+                onClick={() => setLang(l.code)}
+                title={l.name}
+                style={{
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "6px",
+                  fontSize: "0.75rem",
+                  fontWeight: "700",
+                  background: lang === l.code ? "var(--primary-emerald)" : "transparent",
+                  color: lang === l.code ? "#ffffff" : "var(--text-muted)"
+                }}
+              >
+                {l.code.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

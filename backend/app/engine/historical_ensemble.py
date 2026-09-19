@@ -41,6 +41,8 @@ from datetime import date as date_cls, datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
 
 from app.core.config import DATA_DIR
+from app.core.database import SessionLocal
+from app.models.domain import WeatherArchiveCacheEntity
 from app.engine.phenology_gdd import phenology_engine
 from app.engine.recommendation_engine import recommendation_engine
 from app.engine.weather_aggregator import weather_engine, calculate_vpd, calculate_hargreaves_pet
@@ -70,6 +72,96 @@ class _RateLimiter:
             self._next_allowed = max(now, self._next_allowed) + self.min_interval
         if delay > 0:
             await asyncio.sleep(delay)
+
+
+def _load_cached_weather(lat: float, lon: float, years_back: int) -> Optional[Dict[str, Dict[str, Any]]]:
+    """Reads a station's daily series back from the durable Supabase cache,
+    reconstructing the date-keyed dict shape the simulation code expects
+    from the compact parallel-array storage format. None on a cache miss."""
+    lat_key, lon_key = round(lat, 2), round(lon, 2)
+    db = SessionLocal()
+    try:
+        row = (
+            db.query(WeatherArchiveCacheEntity)
+            .filter(
+                WeatherArchiveCacheEntity.lat_key == lat_key,
+                WeatherArchiveCacheEntity.lon_key == lon_key,
+                WeatherArchiveCacheEntity.years_back == years_back,
+            )
+            .first()
+        )
+        if row is None:
+            return None
+        start = date_cls.fromisoformat(row.start_date)
+        payload = row.payload
+        series = {}
+        for i, tmax in enumerate(payload["tmax"]):
+            if tmax is None:
+                continue  # this day was a gap in the originally-fetched archive
+            d = (start + timedelta(days=i)).isoformat()
+            series[d] = {
+                "temp_max": tmax,
+                "temp_min": payload["tmin"][i],
+                "temp_avg": payload["tavg"][i],
+                "humidity_avg": payload["rh"][i],
+                "precipitation": payload["precip"][i],
+            }
+        return series
+    finally:
+        db.close()
+
+
+def _save_cached_weather(lat: float, lon: float, years_back: int, daily_series: Dict[str, Dict[str, Any]]) -> None:
+    """Stores a freshly-fetched daily series as compact parallel arrays.
+    Best-effort: a caching failure (e.g. a transient DB hiccup) should never
+    take down the World Report job itself, since the freshly-fetched data is
+    already usable for this run regardless - it would just need to be
+    re-fetched next time instead of coming from cache."""
+    if not daily_series:
+        return
+    lat_key, lon_key = round(lat, 2), round(lon, 2)
+    dates = sorted(daily_series.keys())
+    start = date_cls.fromisoformat(dates[0])
+    end = date_cls.fromisoformat(dates[-1])
+    n_days = (end - start).days + 1
+
+    tmax, tmin, tavg, rh, precip = [], [], [], [], []
+    for i in range(n_days):
+        d = (start + timedelta(days=i)).isoformat()
+        rec = daily_series.get(d)
+        if rec is None:
+            tmax.append(None); tmin.append(None); tavg.append(None); rh.append(None); precip.append(None)
+        else:
+            tmax.append(rec.get("temp_max")); tmin.append(rec.get("temp_min")); tavg.append(rec.get("temp_avg"))
+            rh.append(rec.get("humidity_avg")); precip.append(rec.get("precipitation"))
+
+    db = SessionLocal()
+    try:
+        existing = (
+            db.query(WeatherArchiveCacheEntity)
+            .filter(
+                WeatherArchiveCacheEntity.lat_key == lat_key,
+                WeatherArchiveCacheEntity.lon_key == lon_key,
+                WeatherArchiveCacheEntity.years_back == years_back,
+            )
+            .first()
+        )
+        payload = {"tmax": tmax, "tmin": tmin, "tavg": tavg, "rh": rh, "precip": precip}
+        if existing:
+            existing.start_date = start.isoformat()
+            existing.payload = payload
+            existing.fetched_at = datetime.utcnow()
+        else:
+            db.add(WeatherArchiveCacheEntity(
+                lat_key=lat_key, lon_key=lon_key, years_back=years_back,
+                start_date=start.isoformat(), payload=payload,
+            ))
+        db.commit()
+    except Exception as e:
+        logger.warning("Failed to cache weather for (%.2f, %.2f): %s: %s", lat, lon, type(e).__name__, e)
+        db.rollback()
+    finally:
+        db.close()
 
 # Same severity score mapping stress_analyzer.py uses, so a pseudo-stress
 # built from this module sorts identically when handed to the shared
@@ -296,9 +388,21 @@ async def run_station_ensemble(
         CROP_MAX_CYCLE_DAYS.get(crop_id, DEFAULT_MAX_CYCLE_DAYS) + 60,
     )
 
-    if rate_limiter:
-        await rate_limiter.wait()
-    daily_series = await weather_engine.get_multi_year_daily_series(station["latitude"], station["longitude"], years_back)
+    # Check the durable cache first - only rate-limit/hit the live archive
+    # API on an actual miss, so a station that's already cached costs
+    # nothing on every subsequent run (this is what makes the World Report
+    # get faster - and resumable - across repeated attempts).
+    cached = _load_cached_weather(station["latitude"], station["longitude"], years_back)
+    if cached is not None:
+        daily_series = cached
+        from_cache = True
+    else:
+        if rate_limiter:
+            await rate_limiter.wait()
+        daily_series = await weather_engine.get_multi_year_daily_series(station["latitude"], station["longitude"], years_back)
+        if daily_series:
+            _save_cached_weather(station["latitude"], station["longitude"], years_back, daily_series)
+        from_cache = False
     if not daily_series:
         raise RuntimeError("No historical weather data returned for this location")
 
@@ -430,6 +534,7 @@ async def run_station_ensemble(
         "is_real_field": station["is_real_field"],
         "years_evaluated": len(year_results),
         "years_available_in_archive": len(data_years),
+        "weather_from_cache": from_cache,
         "stage_summary": stage_summaries,
         "maturity_summary": maturity_summary,
         "recommended_products": recommended_products,
@@ -482,14 +587,17 @@ async def run_world_report(
     errors: List[Dict[str, str]] = []
     by_crop: Dict[str, List[Dict[str, Any]]] = {}
     completed_count = 0
+    cache_hits = 0
 
     async def process(station: Dict[str, Any]):
-        nonlocal completed_count
+        nonlocal completed_count, cache_hits
         async with semaphore:
             try:
                 report = await run_station_ensemble(station, years_back=years_back, lang=lang, rate_limiter=rate_limiter)
                 crop_id = report["crop_id"]
                 by_crop.setdefault(crop_id, []).append(report)
+                if report.get("weather_from_cache"):
+                    cache_hits += 1
             except Exception as e:
                 logger.error("World report failed for station '%s': %s: %s", station.get("name"), type(e).__name__, e)
                 errors.append({"station_name": station.get("name", "?"), "error": f"{type(e).__name__}: {e}"})
@@ -510,6 +618,7 @@ async def run_world_report(
         "total_stations": len(stations),
         "successful_stations": sum(len(v) for v in by_crop.values()),
         "failed_stations": len(errors),
+        "cache_hits": cache_hits,
         "by_crop": by_crop,
         "errors": errors,
     }

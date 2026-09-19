@@ -19,6 +19,30 @@ class FieldEntity(Base):
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class WeatherArchiveCacheEntity(Base):
+    """Durable cache of each station's multi-year daily ERA5 series, keyed
+    by rounded lat/lon - lives in Supabase (survives Render restarts/
+    redeploys), not on Render's own ephemeral disk. Historical weather for a
+    given past date never changes, so once a station is cached it never
+    needs to hit the archive API again, which is what makes the World
+    Report resumable across attempts instead of re-fetching all 217
+    stations' data from scratch every single run.
+
+    Stored as parallel arrays (one row per day, 5 short arrays) rather than
+    a dict keyed by date string, since repeating 5 key names ~9,000 times
+    per station would roughly triple the JSON size for no benefit - the
+    date of entry i is always start_date + i days, since a fetched range is
+    always contiguous."""
+    __tablename__ = "weather_archive_cache"
+
+    id = Column(Integer, primary_key=True, index=True)
+    lat_key = Column(Float, nullable=False, index=True)   # rounded to 2 decimals
+    lon_key = Column(Float, nullable=False, index=True)   # rounded to 2 decimals
+    years_back = Column(Integer, nullable=False)
+    start_date = Column(String(10), nullable=False)       # YYYY-MM-DD of index 0
+    payload = Column(JSON, nullable=False)                # {tmax:[...], tmin:[...], tavg:[...], rh:[...], precip:[...]}
+    fetched_at = Column(DateTime, default=datetime.utcnow)
+
 class UserProfileEntity(Base):
     """App-specific data about a Supabase-authenticated user (tier, limits).
     Supabase's own auth.users table holds email/login history; we don't touch

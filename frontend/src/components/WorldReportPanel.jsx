@@ -205,7 +205,9 @@ export function WorldReportPanel() {
               {t("worldReport.summaryLine", {
                 ok: job.result.successful_stations,
                 total: job.result.total_stations,
-                date: job.result.generated_at?.slice(0, 10)
+                date: job.result.generated_at?.slice(0, 10),
+                cached: job.result.cache_hits || 0,
+                fresh: job.result.successful_stations - (job.result.cache_hits || 0)
               })}
               {job.result.failed_stations > 0 && (
                 <span style={{ color: "#f59e0b" }}> · {t("worldReport.failedNote", { n: job.result.failed_stations })}</span>

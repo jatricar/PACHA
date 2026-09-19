@@ -8,6 +8,7 @@ import logging
 from app.core.database import get_db
 from app.core.auth import require_admin, CurrentUser
 from app.engine.historical_ensemble import run_world_report
+from app.engine.crop_reference import get_crop_reference
 from app.engine.usage_tracking import log_usage_event
 from app.models.domain import (
     FieldEntity, UserProfileEntity, UsageEventEntity,
@@ -138,6 +139,22 @@ def update_user_tier(
         profile.tier = tier
     db.commit()
     return {"user_id": user_id, "tier": tier}
+
+
+@router.get("/crop-reference/{crop_id}")
+def crop_reference(
+    crop_id: str,
+    lang: str = Query(default="es"),
+    _: CurrentUser = Depends(require_admin),
+):
+    """Read-only fact sheet for one crop: real GDD parameters, real
+    per-stage thresholds, and the exact stress severity methodology, for
+    reviewing/calibrating the engine - not something the live analysis
+    computes on the fly."""
+    try:
+        return get_crop_reference(crop_id, lang=lang)
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Unknown crop_id '{crop_id}'")
 
 
 @router.get("/users/{user_id}/fields", response_model=List[FieldResponseSchema])

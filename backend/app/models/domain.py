@@ -115,6 +115,7 @@ class GrowthStageSchema(BaseModel):
     gdd_pct: float
     heat_threshold: float
     vpd_max_threshold: float
+    phase: str = "germination"
     is_current: bool = False
     is_completed: bool = False
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Users, BarChart3, Loader2, Globe2, FolderOpen } from "lucide-react";
+import { ArrowLeft, Users, BarChart3, Loader2, Globe2, FolderOpen, BookOpen } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { fetchAdminUsers, fetchAdminUsageSummary, updateUserTier } from "../api/client";
 import { WorldReportPanel } from "./WorldReportPanel";
 import { AdminUserFieldsPanel } from "./AdminUserFieldsPanel";
+import { AdminCropReferencePanel } from "./AdminCropReferencePanel";
 
 export function AdminPage({ onClose }) {
   const { t } = useLanguage();
@@ -75,10 +76,19 @@ export function AdminPage({ onClose }) {
           <Globe2 size={16} />
           <span>{t("admin.worldReportTab")}</span>
         </button>
+        <button
+          onClick={() => setTab("cropref")}
+          className={tab === "cropref" ? "btn-emerald" : "btn-outline"}
+        >
+          <BookOpen size={16} />
+          <span>{t("admin.cropRefTab")}</span>
+        </button>
       </div>
 
       {tab === "worldreport" ? (
         <WorldReportPanel />
+      ) : tab === "cropref" ? (
+        <AdminCropReferencePanel />
       ) : loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
           <Loader2 size={32} className="animate-spin" color="#10b981" />

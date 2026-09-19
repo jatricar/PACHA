@@ -3,15 +3,7 @@ import { X, Navigation, Upload, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { LocationMapPicker } from "./LocationMapPicker";
 
-const CROP_IDS_IN_ORDER = [
-  "maize", "sugarcane", "wheat", "rice", "potato",
-  "sugar_beet", "soybean", "cassava", "oil_palm", "barley"
-];
-
-const CROP_ICONS = {
-  maize: "🌽", sugarcane: "🎋", wheat: "🌾", rice: "🍚", potato: "🥔",
-  sugar_beet: "🍠", soybean: "🫘", cassava: "🥔", oil_palm: "🌴", barley: "🌾"
-};
+import { CROP_IDS_IN_ORDER, CROP_ICONS } from "../constants/crops";
 
 export function FieldModal({ isOpen, onClose, onSubmitField, onBatchUpload }) {
   const { t } = useLanguage();

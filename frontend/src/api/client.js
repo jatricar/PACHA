@@ -118,6 +118,12 @@ export async function createFieldForUser(userId, fieldData) {
   return res.json();
 }
 
+export async function fetchCropReference(cropId, lang) {
+  const res = await fetch(`${API_BASE}/admin/crop-reference/${cropId}?lang=${lang || "es"}`, { headers: await authHeaders() });
+  if (!res.ok) throw new Error(await parseErrorDetail(res));
+  return res.json();
+}
+
 // --- Admin (require the signed-in user's email to be in ADMIN_EMAILS) ---
 
 export async function fetchAdminUsers() {

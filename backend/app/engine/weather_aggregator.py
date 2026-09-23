@@ -231,6 +231,64 @@ class WeatherAggregatorEngine:
         return out
 
     # ------------------------------------------------------------------
+    # Source 4: NASA POWER (power.larc.nasa.gov) - global coverage.
+    # No API key, no rate limit. NOT used for the 7-day live forecast
+    # ensemble (NASA POWER only serves observed/reanalysis data, not
+    # forecasts - it lags real time by ~2-3 days). Instead it's wired in
+    # as an independent fallback wherever we currently rely on a single
+    # historical/actuals source (ERA5 archive via Open-Meteo, or
+    # Open-Meteo's own past_days actuals): if that one source is down,
+    # NASA POWER lets us still return real recorded weather instead of
+    # falling all the way through to the synthetic estimate.
+    # ------------------------------------------------------------------
+    async def fetch_nasa_power_daily(self, lat: float, lon: float, start_date: date_cls, end_date: date_cls) -> Dict[str, Dict[str, Any]]:
+        if start_date > end_date:
+            return {}
+        url = (
+            "https://power.larc.nasa.gov/api/temporal/daily/point"
+            "?parameters=T2M_MAX,T2M_MIN,T2M,RH2M,PRECTOTCORR"
+            "&community=AG"
+            f"&longitude={lon}&latitude={lat}"
+            f"&start={start_date.strftime('%Y%m%d')}&end={end_date.strftime('%Y%m%d')}"
+            "&format=JSON"
+        )
+        async with httpx.AsyncClient(timeout=self.era5_timeout) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+
+        params = data.get("properties", {}).get("parameter", {})
+        tmax_by_date = params.get("T2M_MAX", {})
+        tmin_by_date = params.get("T2M_MIN", {})
+        tavg_by_date = params.get("T2M", {})
+        rh_by_date = params.get("RH2M", {})
+        precip_by_date = params.get("PRECTOTCORR", {})
+
+        # NASA POWER uses -999 (or similar large negative sentinels) for
+        # missing values instead of null/omission.
+        def _clean(v):
+            return None if v is None or v <= -900 else v
+
+        out: Dict[str, Dict[str, Any]] = {}
+        for date_key, tmax_raw in tmax_by_date.items():
+            tmax = _clean(tmax_raw)
+            tmin = _clean(tmin_by_date.get(date_key))
+            if tmax is None or tmin is None:
+                continue
+            date_str = f"{date_key[0:4]}-{date_key[4:6]}-{date_key[6:8]}"
+            tavg = _clean(tavg_by_date.get(date_key))
+            rh = _clean(rh_by_date.get(date_key))
+            precip = _clean(precip_by_date.get(date_key))
+            out[date_str] = {
+                "temp_max": tmax,
+                "temp_min": tmin,
+                "temp_avg": tavg if tavg is not None else (tmax + tmin) / 2.0,
+                "humidity_avg": rh if rh is not None else 65.0,
+                "precipitation": precip if precip is not None else 0.0,
+            }
+        return out
+
+    # ------------------------------------------------------------------
     # Synthetic fallback (only used if ALL live sources fail)
     # ------------------------------------------------------------------
     def generate_synthetic_3source_ensemble(self, lat: float, lon: float, base_date: datetime = None) -> List[Dict[str, Any]]:
@@ -382,12 +440,79 @@ class WeatherAggregatorEngine:
                 "get_historical_baseline: ERA5 climatology fetch failed after retries for (%s, %s): %s: %s",
                 lat, lon, type(e).__name__, e
             )
-            fallback = self._generate_synthetic_historical_baseline(lat, lon)
-            fallback["_meta"] = {"data_source": "synthetic_fallback", "years_used": 0}
-            # Cache the fallback too (briefly counted via same TTL) so a slow/down
-            # endpoint doesn't add 30s of latency to every single request.
-            self._era5_cache[cache_key] = {"data": fallback, "fetched_at": time.time()}
-            return fallback
+
+        # ERA5 (via Open-Meteo) is down - try NASA POWER as an independent
+        # second source before giving up on real data entirely.
+        try:
+            monthly = await self._fetch_with_retries(self._fetch_nasa_power_monthly_climatology, lat, lon, years)
+            monthly["_meta"] = {"data_source": "nasa_power_archive", "years_used": years}
+            self._era5_cache[cache_key] = {"data": monthly, "fetched_at": time.time()}
+            return monthly
+        except Exception as e:
+            logger.error(
+                "get_historical_baseline: NASA POWER climatology fetch also failed for (%s, %s): %s: %s",
+                lat, lon, type(e).__name__, e
+            )
+
+        fallback = self._generate_synthetic_historical_baseline(lat, lon)
+        fallback["_meta"] = {"data_source": "synthetic_fallback", "years_used": 0}
+        # Cache the fallback too (briefly counted via same TTL) so a slow/down
+        # endpoint doesn't add 30s of latency to every single request.
+        self._era5_cache[cache_key] = {"data": fallback, "fetched_at": time.time()}
+        return fallback
+
+    async def _fetch_nasa_power_monthly_climatology(self, lat: float, lon: float, years: int) -> Dict[str, Any]:
+        """Same monthly-bucketing logic as _fetch_era5_monthly_climatology,
+        but sourced from NASA POWER instead of ERA5 - used only when ERA5
+        is unreachable, so a single provider outage doesn't force us down
+        to the synthetic estimate."""
+        end_date = datetime.now(timezone.utc).date() - timedelta(days=7)
+        try:
+            start_date = end_date.replace(year=end_date.year - years)
+        except ValueError:
+            start_date = end_date.replace(month=2, day=28, year=end_date.year - years)
+
+        daily_series = await self.fetch_nasa_power_daily(lat, lon, start_date, end_date)
+        if not daily_series:
+            raise ValueError("NASA POWER archive returned no data for these coordinates")
+
+        buckets = {m: {"tmax": [], "tmin": [], "rh": [], "precip_by_year": {}} for m in range(1, 13)}
+        for d, v in daily_series.items():
+            year = int(d[0:4])
+            month = int(d[5:7])
+            b = buckets[month]
+            if v.get("temp_max") is not None:
+                b["tmax"].append(v["temp_max"])
+            if v.get("temp_min") is not None:
+                b["tmin"].append(v["temp_min"])
+            if v.get("humidity_avg") is not None:
+                b["rh"].append(v["humidity_avg"])
+            if v.get("precipitation") is not None:
+                b["precip_by_year"][year] = b["precip_by_year"].get(year, 0.0) + v["precipitation"]
+
+        monthly_hist: Dict[str, Any] = {}
+        for month in range(1, 13):
+            b = buckets[month]
+            if not b["tmax"] or not b["tmin"]:
+                raise ValueError(f"Insufficient NASA POWER data for month {month}")
+            hist_max = sum(b["tmax"]) / len(b["tmax"])
+            hist_min = sum(b["tmin"]) / len(b["tmin"])
+            hist_avg = (hist_max + hist_min) / 2.0
+            hist_rh = (sum(b["rh"]) / len(b["rh"])) if b["rh"] else 65.0
+            hist_pr_total = (
+                sum(b["precip_by_year"].values()) / len(b["precip_by_year"])
+                if b["precip_by_year"] else 0.0
+            )
+            hist_vpd = calculate_vpd(hist_avg, hist_rh)
+
+            monthly_hist[str(month)] = {
+                "month": month,
+                "hist_temp_max": round(hist_max, 1),
+                "hist_temp_min": round(hist_min, 1),
+                "hist_precipitation": round(hist_pr_total, 1),
+                "hist_vpd_avg": round(hist_vpd, 2),
+            }
+        return monthly_hist
 
     # ------------------------------------------------------------------
     # Real daily series since planting date, for GDD accumulation.
@@ -439,6 +564,30 @@ class WeatherAggregatorEngine:
                 logger.error(
                     "get_gdd_weather_series: ERA5 archive fetch failed after retries for (%s, %s), %s..%s: %s: %s",
                     lat, lon, planting_date, archive_end, type(e).__name__, e
+                )
+
+        # If Open-Meteo (recent actuals) and/or ERA5 (older actuals) left
+        # gaps - or failed outright - try NASA POWER to fill in whatever's
+        # still missing across the whole planting-to-today window, before
+        # giving up on real data.
+        missing_dates = [
+            (planting_date + timedelta(days=i))
+            for i in range(days_since_planting + 1)
+            if (planting_date + timedelta(days=i)).strftime("%Y-%m-%d") not in combined
+        ]
+        if missing_dates:
+            try:
+                power_series = await self._fetch_with_retries(
+                    self.fetch_nasa_power_daily, lat, lon, missing_dates[0], missing_dates[-1]
+                )
+                # Only fills gaps - never overrides data already recovered
+                # from Open-Meteo/ERA5.
+                for d, v in power_series.items():
+                    combined.setdefault(d, v)
+            except Exception as e:
+                logger.error(
+                    "get_gdd_weather_series: NASA POWER gap-fill failed for (%s, %s): %s: %s",
+                    lat, lon, type(e).__name__, e
                 )
 
         if not combined:
